@@ -3,37 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scan to Control BrightSign</title>
+    <title>Power Design QR Code Page</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&display=swap');
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #000;
+            font-family: 'Libre Franklin', sans-serif;
+            background: url('The%20Bolt.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
             color: white;
-            text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            text-align: center;
         }
-        .container {
+
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .logo-container img {
+            width: 200px;
+        }
+
+        .header {
+            font-size: 36px;
+            font-weight: bold;
+            color: #C8102E;
+        }
+
+        .qr-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
             background: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
         }
-        img {
-            width:  200px;
-            height: 200px;
-        }
-        h2 {
-            color: black;
+
+        .qr-container img {
+            width: 150px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Scan the QR Code to Control the Videos</h2>
-        <img src="qr_remote.png" alt="Scan to Control BrightSign">
+    <div class="logo-container">
+        <img src="Power%20Design%20Logo.jpg" alt="Power Design Logo">
+    </div>
+    
+    <div class="header">Welcome to Power Design</div>
+    
+    <div class="qr-container">
+        <img src="qr_code.png" alt="Scan to Access Remote">
+        <p style="color:black; font-weight: bold;">Scan to Control Videos</p>
     </div>
 </body>
 </html>
