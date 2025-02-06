@@ -3,65 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Design QR Code Page</title>
+    <title>Power Design - QR Control</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&display=swap');
 
+        /* Global Styles */
         body {
             font-family: 'Libre Franklin', sans-serif;
-            background: url('The%20Bolt.jpg') no-repeat center center fixed;
+            background: url('the_bolt.jpg') no-repeat center center fixed;
             background-size: cover;
             margin: 0;
             padding: 0;
-            color: white;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            color: white;
             text-align: center;
         }
 
+        /* Top Left Logo */
         .logo-container {
             position: absolute;
             top: 20px;
             left: 20px;
         }
-
         .logo-container img {
-            width: 200px;
+            height: 60px;
         }
 
-        .header {
-            font-size: 36px;
-            font-weight: bold;
-            color: #C8102E;
-        }
-
+        /* QR Code Box */
         .qr-container {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
+            bottom: 30px;
+            right: 30px;
             background: white;
-            padding: 15px;
+            padding: 20px;
             border-radius: 10px;
+            text-align: center;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
         }
 
         .qr-container img {
             width: 150px;
+            height: 150px;
+        }
+
+        .qr-container p {
+            font-size: 18px;
+            font-weight: bold;
+            color: black;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
+    <!-- Power Design Logo -->
     <div class="logo-container">
-        <img src="Power%20Design%20Logo.jpg" alt="Power Design Logo">
+        <img src="power_design_logo.jpg" alt="Power Design Logo">
     </div>
-    
-    <div class="header">Welcome to Power Design</div>
-    
+
+    <!-- QR Code Section -->
     <div class="qr-container">
-        <img src="qr_code.png" alt="Scan to Access Remote">
-        <p style="color:black; font-weight: bold;">Scan to Control Videos</p>
+        <p>Scan the QR Code to Control the Videos</p>
+        <img src="qr_code.png" alt="QR Code">
     </div>
 </body>
 </html>
