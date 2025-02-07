@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landing Page</title>
+    <title>PDI Landing Page</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&display=swap');
+
         body {
             background-color: black;
             color: white;
@@ -13,6 +15,45 @@
             margin: 0;
             overflow: hidden;
         }
+
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('the_bolt.jpg') no-repeat center center;
+            background-size: contain;
+            z-index: -1;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+        }
+
+        .qr-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+        }
+
+        .banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: red;
+            padding: 15px 30px;
+            font-size: 36px;
+            font-weight: bold;
+            color: black;
+            border-radius: 5px;
+        }
+
         .video-container {
             position: fixed;
             top: 0;
@@ -25,6 +66,7 @@
             background-color: black;
             z-index: 10;
         }
+
         video {
             width: 80%;
             max-height: 80%;
@@ -33,26 +75,44 @@
 </head>
 <body>
 
+    <div class="background"></div>
+    <img src="power_design_logo.jpg" alt="PDI Logo" class="logo">
+    <div class="banner" id="banner">We Are Power Design</div>
+    <img src="qr_code.png" alt="QR Code" class="qr-container">
+
+    <!-- Video Player -->
     <div class="video-container" id="videoWrapper">
-        <video id="videoPlayer" controls autoplay>
+        <video id="videoPlayer" controls autoplay onended="returnToLanding()">
             <source id="videoSource" src="" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
 
     <script>
-        const ws = new WebSocket('ws://localhost:8080');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const videoWrapper = document.getElementById('videoWrapper');
+        let ws;
 
-        ws.onopen = () => {
-            console.log('Connected to the WebSocket server');
-        };
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8080');
 
-        ws.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            handleCommand(message);
-        };
+            ws.onopen = () => {
+                console.log('Connected to WebSocket server.');
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('Received:', data);
+                handleCommand(data);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket Error:', error);
+            };
+
+            ws.onclose = () => {
+                console.warn('WebSocket connection closed. Reconnecting in 3 seconds...');
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
 
         function handleCommand({ action, video }) {
             switch (action) {
@@ -60,17 +120,17 @@
                     playVideo(video);
                     break;
                 case 'pause':
-                    videoPlayer.pause();
+                    document.getElementById('videoPlayer').pause();
                     break;
                 case 'resume':
-                    videoPlayer.play();
+                    document.getElementById('videoPlayer').play();
                     break;
                 case 'restart':
-                    videoPlayer.currentTime = 0;
-                    videoPlayer.play();
+                    document.getElementById('videoPlayer').currentTime = 0;
+                    document.getElementById('videoPlayer').play();
                     break;
                 case 'stop':
-                    stopVideo();
+                    returnToLanding();
                     break;
                 default:
                     console.log('Unknown action:', action);
@@ -81,6 +141,25 @@
             const videoURLs = {
                 'video1.mp4': 'https://drive.google.com/uc?export=download&id=1Mu_ZZN7RiM8okE4Dc1ChVksaSRP1MxbE',
                 'video2.mp4': 'https://drive.google.com/uc?export=download&id=18szLYTFuRqLO5XjCqwsNkmFxUaDyV4ih',
-                'video3
-::contentReference[oaicite:0]{index=0}
- 
+                'video3.mp4': 'https://drive.google.com/uc?export=download&id=1iTcXj-LLhihcsCUxIaWh_peZe7qKygzD'
+            };
+
+            if (videoURLs[video]) {
+                document.getElementById("videoSource").src = videoURLs[video];
+                document.getElementById("videoPlayer").load();
+                document.getElementById("videoWrapper").style.display = "flex";
+                document.getElementById("banner").style.display = "none"; // Hide banner while playing
+            }
+        }
+
+        function returnToLanding() {
+            document.getElementById("videoWrapper").style.display = "none";
+            document.getElementById("videoSource").src = "";
+            document.getElementById("banner").style.display = "block"; // Show banner after video ends
+        }
+
+        connectWebSocket();
+    </script>
+
+</body>
+</html>
