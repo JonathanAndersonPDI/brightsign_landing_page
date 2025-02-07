@@ -5,111 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDI Landing Page</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@900&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&display=swap');
+        
         body {
-            background-color: black;
-            background-image: url('the_bolt.jpg');
-            background-size: cover;
-            background-position: center;
-            color: white;
             font-family: 'Libre Franklin', sans-serif;
-            text-align: center;
+            background: url('the_bolt.jpg') no-repeat center center fixed;
+            background-size: contain; /* Adjusted to fit within the window */
+            color: white;
             margin: 0;
             padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;
         }
         
-        .logo {
+        .logo-container {
             position: absolute;
             top: 20px;
             left: 20px;
-            width: 200px;
         }
-
+        
+        .logo-container img {
+            height: 80px; /* Increased size */
+        }
+        
         .qr-container {
             position: absolute;
             bottom: 20px;
             right: 20px;
-            background-color: black;
-            padding: 10px;
+            background: white;
+            padding: 15px;
             border-radius: 10px;
-            border: 5px solid red;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
         }
-
+        
         .qr-container img {
-            width: 150px;
+            width: 150px; /* Reduced size */
         }
-
-        .video-container {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 60%;
-            background: black;
-            border-radius: 10px;
-            padding: 10px;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            border-radius: 10px;
-        }
-
     </style>
 </head>
 <body>
-
-    <img src="power_design_logo.jpg" alt="Power Design Logo" class="logo">
+    <div class="logo-container">
+        <img src="power_design_logo.jpg" alt="Power Design Logo">
+    </div>
     
-    <h1 style="color: red; font-family: 'Libre Franklin', sans-serif;">Check Out PDI</h1>
-
-    <div class="video-container" id="videoContainer">
-        <video id="landingVideo" controls>
-            <source id="videoSource" src="" type="video/mp4">
-        </video>
-    </div>
-
     <div class="qr-container">
-        <h3>Scan the QR Code to Control the Videos</h3>
-        <img src="qr_code.png" alt="Scan to control">
+        <img src="qr_code.png" alt="QR Code">
     </div>
-
-    <script>
-        const ws = new WebSocket("ws://yourserver-ip:8080");
-
-        ws.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            const videoContainer = document.getElementById("videoContainer");
-            const videoElement = document.getElementById("landingVideo");
-            const videoSource = document.getElementById("videoSource");
-
-            if (data.command === "play") {
-                videoSource.src = data.video;
-                videoElement.load();
-                videoContainer.style.display = "block";
-                videoElement.play();
-            } else if (data.command === "pause") {
-                videoElement.pause();
-            } else if (data.command === "resume") {
-                videoElement.play();
-            } else if (data.command === "restart") {
-                videoElement.currentTime = 0;
-                videoElement.play();
-            } else if (data.command === "stop") {
-                videoContainer.style.display = "none";
-                videoElement.pause();
-                videoElement.currentTime = 0;
-            }
-
-            videoElement.onended = function() {
-                videoContainer.style.display = "none";
-            };
-        };
-    </script>
-
 </body>
 </html>
