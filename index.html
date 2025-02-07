@@ -4,147 +4,141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDI Landing Page</title>
-    
     <style>
-        /* Import Wild Youth Brush Font */
+        @import url('https://fonts.googleapis.com/css2?family=Podium+Sharp:wght@900&display=swap');
         @font-face {
             font-family: 'Wild Youth';
-            src: url('WildYouth.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
+            src: url('Wild_Youth.ttf') format('truetype');
         }
 
-        /* Global Styles */
         body {
+            font-family: 'Podium Sharp', sans-serif;
+            background-color: #000;
+            color: #ffffff;
+            text-align: center;
             margin: 0;
             padding: 0;
-            background-color: black;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            position: relative;
         }
 
-        /* Bolt Background */
         .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: url('the_bolt.jpg') no-repeat center center;
+            background-size: contain;
+            z-index: -1;
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .logo {
+            height: 80px;
+        }
+
+        .banner {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 800px; /* Ensures it fits within the viewport */
-            z-index: -1;
-        }
-
-        /* PDI Logo */
-        .logo {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 200px; /* Adjusted size */
-        }
-
-        /* QR Code */
-        .qr-container {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 150px;
-        }
-
-        /* Banner for "We Are Power Design" */
-        .banner {
-            position: absolute;
-            top: 48%;
-            left: 48%;
-            transform: translate(-48%, -48%);
-            background-color: red;
+            background: red;
             padding: 20px;
+            width: 50%;
             text-align: center;
-            width: 80%;
-            max-width: 800px;
             border-radius: 10px;
         }
 
         .banner h1 {
             font-family: 'Wild Youth', cursive;
-            font-size: 64px;
             color: black;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            font-size: 36px;
             margin: 0;
         }
 
-        /* Video Container */
-        #video-container {
+        .qr-container {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 800px;
-            display: none; /* Hidden until triggered */
-        }
-
-        video {
-            width: 100%;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
             border-radius: 10px;
         }
 
+        .video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            background: black;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-container video {
+            width: 80%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
+    <div class="background"></div>
 
-    <!-- PDI Logo -->
-    <img src="power_design_logo.jpg" alt="Power Design Logo" class="logo">
+    <div class="logo-container">
+        <img class="logo" src="power_design_logo.jpg" alt="Power Design Logo">
+    </div>
 
-    <!-- Background Bolt -->
-    <img src="the_bolt.jpg" alt="Bolt Background" class="background">
-
-    <!-- Banner with "We Are Power Design" -->
     <div class="banner">
         <h1>We Are Power Design</h1>
     </div>
 
-    <!-- QR Code -->
-    <img src="qr_code.png" alt="Scan to Control Videos" class="qr-container">
+    <div class="qr-container">
+        <img src="qr_code.png" alt="Scan to Control" width="150">
+    </div>
 
-    <!-- Video Container -->
-    <div id="video-container">
-        <video id="video-player" controls>
-            <source src="" type="video/mp4">
+    <div class="video-container" id="videoPlayer">
+        <video id="mainVideo" controls>
+            <source id="videoSource" src="" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
 
     <script>
-        // Function to Play Video
-        function playVideo(videoURL) {
-            const videoPlayer = document.getElementById("video-player");
-            const videoContainer = document.getElementById("video-container");
+        function playVideo(videoId) {
+            const videos = {
+                'video1': 'https://drive.google.com/uc?export=download&id=1Mu_ZZN7RiM8okE4Dc1ChVksaSRP1MxbE',
+                'video2': 'https://drive.google.com/uc?export=download&id=18szLYTFuRqLO5XjCqwsNkmFxUaDyV4ih',
+                'video3': 'https://drive.google.com/uc?export=download&id=1iTcXj-LLhihcsCUxIaWh_peZe7qKygzD'
+            };
 
-            videoPlayer.src = videoURL;
-            videoContainer.style.display = "block"; // Show the video container
-            videoPlayer.play();
-
-            // Hide banner while video plays
-            document.querySelector(".banner").style.display = "none";
+            if (videos[videoId]) {
+                document.getElementById('videoSource').src = videos[videoId];
+                document.getElementById('mainVideo').load();
+                document.getElementById('videoPlayer').style.display = 'flex';
+                document.getElementById('mainVideo').play();
+            }
         }
 
-        // Function to Hide Video & Show Banner Again After Video Ends
-        document.getElementById("video-player").addEventListener("ended", function() {
-            document.getElementById("video-container").style.display = "none";
-            document.querySelector(".banner").style.display = "block";
-        });
+        function stopVideo() {
+            document.getElementById('mainVideo').pause();
+            document.getElementById('videoPlayer').style.display = 'none';
+        }
 
-        // Function to Receive Video Commands from Video Selector Page
-        window.addEventListener("message", function(event) {
-            if (event.data.type === "playVideo") {
-                playVideo(event.data.videoURL);
+        window.addEventListener("message", (event) => {
+            if (event.data && event.data.video) {
+                playVideo(event.data.video);
+            }
+            if (event.data === 'stop') {
+                stopVideo();
             }
         }, false);
     </script>
-
 </body>
 </html>
