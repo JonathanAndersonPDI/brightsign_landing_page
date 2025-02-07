@@ -11,21 +11,26 @@
         }
 
         body {
-            background-color: black;
-            background-image: url('the_bolt.jpg');
-            background-size: contain;
-            background-position: center;
-            background-repeat: no-repeat;
-            color: white;
-            text-align: center;
             margin: 0;
             padding: 0;
+            background-color: black;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             position: relative;
+            overflow: hidden;
+        }
+
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('the_bolt.jpg') no-repeat center center;
+            background-size: contain;
+            z-index: 1;
         }
 
         .logo {
@@ -33,21 +38,26 @@
             top: 20px;
             left: 20px;
             width: 200px;
+            z-index: 2;
         }
 
         .banner {
-            background-color: red;
-            color: black;
-            font-family: 'Wild Youth', sans-serif;
-            font-size: 3rem;
-            padding: 20px;
-            text-align: center;
             position: absolute;
             top: 50%;
-            transform: translateY(-50%);
-            width: 80%;
-            max-width: 800px;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: red;
+            padding: 20px 40px;
             border-radius: 10px;
+            text-align: center;
+            z-index: 3;
+        }
+
+        .banner h1 {
+            font-family: 'Wild Youth', sans-serif;
+            font-size: 48px;
+            color: black;
+            margin: 0;
         }
 
         .qr-container {
@@ -57,60 +67,56 @@
             background-color: white;
             padding: 10px;
             border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+            z-index: 3;
         }
 
         .qr-container img {
             width: 150px;
+            height: 150px;
         }
 
         /* Video Player Section */
-        #videoContainer {
+        .video-container {
             display: none;
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 60%;
-            background: black;
-            border-radius: 10px;
-            overflow: hidden;
-            z-index: 999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            justify-content: center;
+            align-items: center;
+            z-index: 4;
         }
 
         video {
-            width: 100%;
-            height: 100%;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: red;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 16px;
-            border-radius: 5px;
+            max-width: 90%;
+            max-height: 90%;
         }
     </style>
 </head>
 <body>
-    <img src="power_design_logo.jpg" alt="Power Design Logo" class="logo">
-    
-    <div class="banner">We Are Power Design</div>
 
+    <!-- Background -->
+    <div class="background"></div>
+
+    <!-- Logo -->
+    <img src="power_design_logo.jpg" alt="Power Design Logo" class="logo">
+
+    <!-- Centered Banner -->
+    <div class="banner">
+        <h1>We Are Power Design</h1>
+    </div>
+
+    <!-- QR Code -->
     <div class="qr-container">
-        <p>Scan the QR Code to Control the Videos</p>
-        <img src="qr_code.png" alt="QR Code">
+        <img src="qr_code.png" alt="Scan to Control Videos">
     </div>
 
     <!-- Video Player -->
-    <div id="videoContainer">
-        <button class="close-btn" onclick="stopVideo()">X</button>
-        <video id="player" controls>
+    <div class="video-container" id="videoPlayer">
+        <video id="videoElement" controls>
             <source src="" type="video/mp4">
             Your browser does not support the video tag.
         </video>
@@ -118,31 +124,32 @@
 
     <script>
         function playVideo(videoSrc) {
-            let player = document.getElementById("player");
-            let videoContainer = document.getElementById("videoContainer");
+            const videoContainer = document.getElementById("videoPlayer");
+            const videoElement = document.getElementById("videoElement");
 
-            player.src = videoSrc;
-            videoContainer.style.display = "block";
-            player.play();
+            videoElement.src = videoSrc;
+            videoContainer.style.display = "flex";
+            videoElement.play();
         }
 
         function stopVideo() {
-            let player = document.getElementById("player");
-            let videoContainer = document.getElementById("videoContainer");
+            const videoContainer = document.getElementById("videoPlayer");
+            const videoElement = document.getElementById("videoElement");
 
-            player.pause();
-            player.src = "";
+            videoElement.pause();
+            videoElement.currentTime = 0;
             videoContainer.style.display = "none";
         }
 
-        // Listen for messages from the video selector page
-        window.addEventListener("message", function(event) {
-            if (event.data.command === "playVideo") {
+        // Simulated command from the video selector
+        window.addEventListener("message", (event) => {
+            if (event.data.type === "playVideo") {
                 playVideo(event.data.videoSrc);
-            } else if (event.data.command === "stopVideo") {
+            } else if (event.data.type === "stopVideo") {
                 stopVideo();
             }
-        }, false);
+        });
     </script>
+
 </body>
 </html>
