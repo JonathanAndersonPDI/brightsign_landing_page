@@ -5,19 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDI Landing Page</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Podium+Sharp:wght@900&display=swap');
-        @font-face {
-            font-family: 'Wild Youth';
-            src: url('Wild_Youth.ttf') format('truetype');
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&display=swap');
 
         body {
-            font-family: 'Podium Sharp', sans-serif;
-            background-color: #000;
-            color: #ffffff;
+            background-color: black;
+            color: white;
+            font-family: 'Libre Franklin', sans-serif;
             text-align: center;
             margin: 0;
-            padding: 0;
             overflow: hidden;
         }
 
@@ -25,21 +20,25 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             background: url('the_bolt.jpg') no-repeat center center;
             background-size: contain;
             z-index: -1;
         }
 
-        .logo-container {
+        .logo {
             position: absolute;
             top: 20px;
             left: 20px;
+            width: 200px;
         }
 
-        .logo {
-            height: 80px;
+        .qr-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
         }
 
         .banner {
@@ -47,98 +46,86 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: red;
-            padding: 20px;
-            width: 50%;
-            text-align: center;
-            border-radius: 10px;
-        }
-
-        .banner h1 {
-            font-family: 'Wild Youth', cursive;
-            color: black;
+            background-color: red;
+            padding: 15px 30px;
             font-size: 36px;
-            margin: 0;
-        }
-
-        .qr-container {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            padding: 10px;
-            border-radius: 10px;
+            font-weight: bold;
+            color: black;
+            border-radius: 5px;
         }
 
         .video-container {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             display: none;
-            background: black;
             justify-content: center;
             align-items: center;
+            background-color: black;
+            z-index: 10;
         }
 
-        .video-container video {
+        video {
             width: 80%;
-            height: auto;
+            max-height: 80%;
         }
     </style>
 </head>
 <body>
+
     <div class="background"></div>
+    <img src="power_design_logo.jpg" alt="PDI Logo" class="logo">
+    <div class="banner">We Are Power Design</div>
+    <img src="qr_code.png" alt="QR Code" class="qr-container">
 
-    <div class="logo-container">
-        <img class="logo" src="power_design_logo.jpg" alt="Power Design Logo">
-    </div>
-
-    <div class="banner">
-        <h1>We Are Power Design</h1>
-    </div>
-
-    <div class="qr-container">
-        <img src="qr_code.png" alt="Scan to Control" width="150">
-    </div>
-
-    <div class="video-container" id="videoPlayer">
-        <video id="mainVideo" controls>
+    <!-- Video Player -->
+    <div class="video-container" id="videoWrapper">
+        <video id="videoPlayer" controls autoplay onended="returnToLanding()">
             <source id="videoSource" src="" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
 
     <script>
-        function playVideo(videoId) {
-            const videos = {
-                'video1': 'https://drive.google.com/uc?export=download&id=1Mu_ZZN7RiM8okE4Dc1ChVksaSRP1MxbE',
-                'video2': 'https://drive.google.com/uc?export=download&id=18szLYTFuRqLO5XjCqwsNkmFxUaDyV4ih',
-                'video3': 'https://drive.google.com/uc?export=download&id=1iTcXj-LLhihcsCUxIaWh_peZe7qKygzD'
+        const ws = new WebSocket("ws://yourserver-ip:8080");
+
+        ws.onmessage = function(event) {
+            let data = JSON.parse(event.data);
+            if (data.command === "play") {
+                playVideo(data.video);
+            } else if (data.command === "pause") {
+                document.getElementById("videoPlayer").pause();
+            } else if (data.command === "resume") {
+                document.getElementById("videoPlayer").play();
+            } else if (data.command === "restart") {
+                document.getElementById("videoPlayer").currentTime = 0;
+                document.getElementById("videoPlayer").play();
+            } else if (data.command === "stop") {
+                returnToLanding();
+            }
+        };
+
+        function playVideo(video) {
+            let videoURLs = {
+                "video1.mp4": "https://drive.google.com/uc?export=download&id=1Mu_ZZN7RiM8okE4Dc1ChVksaSRP1MxbE",
+                "video2.mp4": "https://drive.google.com/uc?export=download&id=18szLYTFuRqLO5XjCqwsNkmFxUaDyV4ih",
+                "video3.mp4": "https://drive.google.com/uc?export=download&id=1iTcXj-LLhihcsCUxIaWh_peZe7qKygzD"
             };
 
-            if (videos[videoId]) {
-                document.getElementById('videoSource').src = videos[videoId];
-                document.getElementById('mainVideo').load();
-                document.getElementById('videoPlayer').style.display = 'flex';
-                document.getElementById('mainVideo').play();
+            if (videoURLs[video]) {
+                document.getElementById("videoSource").src = videoURLs[video];
+                document.getElementById("videoPlayer").load();
+                document.getElementById("videoWrapper").style.display = "flex";
             }
         }
 
-        function stopVideo() {
-            document.getElementById('mainVideo').pause();
-            document.getElementById('videoPlayer').style.display = 'none';
+        function returnToLanding() {
+            document.getElementById("videoWrapper").style.display = "none";
+            document.getElementById("videoSource").src = "";
         }
-
-        window.addEventListener("message", (event) => {
-            if (event.data && event.data.video) {
-                playVideo(event.data.video);
-            }
-            if (event.data === 'stop') {
-                stopVideo();
-            }
-        }, false);
     </script>
+
 </body>
 </html>
