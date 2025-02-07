@@ -7,46 +7,45 @@
     <style>
         @font-face {
             font-family: 'Wild Youth';
-            src: url('Wild_Youth.ttf') format('truetype');
+            src: url('Wild Youth.ttf') format('truetype');
         }
 
         body {
-            margin: 0;
-            padding: 0;
             background-color: black;
             background-image: url('the_bolt.jpg');
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            position: relative;
         }
 
-        .logo-container {
+        .logo {
             position: absolute;
             top: 20px;
             left: 20px;
-        }
-
-        .logo-container img {
-            width: 250px;
+            width: 200px;
         }
 
         .banner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #C8102E;
+            background-color: red;
             color: black;
             font-family: 'Wild Youth', sans-serif;
-            font-size: 48px;
+            font-size: 3rem;
+            padding: 20px;
             text-align: center;
-            padding: 20px 40px;
-            width: 80%; /* Runs the length of the bolt */
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80%;
             max-width: 800px;
             border-radius: 10px;
         }
@@ -63,17 +62,87 @@
         .qr-container img {
             width: 150px;
         }
+
+        /* Video Player Section */
+        #videoContainer {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 60%;
+            background: black;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 999;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="logo-container">
-        <img src="power_design_logo.jpg" alt="Power Design Logo">
-    </div>
+    <img src="power_design_logo.jpg" alt="Power Design Logo" class="logo">
     
     <div class="banner">We Are Power Design</div>
-    
+
     <div class="qr-container">
-        <img src="qr_code.png" alt="Scan Me">
+        <p>Scan the QR Code to Control the Videos</p>
+        <img src="qr_code.png" alt="QR Code">
     </div>
+
+    <!-- Video Player -->
+    <div id="videoContainer">
+        <button class="close-btn" onclick="stopVideo()">X</button>
+        <video id="player" controls>
+            <source src="" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <script>
+        function playVideo(videoSrc) {
+            let player = document.getElementById("player");
+            let videoContainer = document.getElementById("videoContainer");
+
+            player.src = videoSrc;
+            videoContainer.style.display = "block";
+            player.play();
+        }
+
+        function stopVideo() {
+            let player = document.getElementById("player");
+            let videoContainer = document.getElementById("videoContainer");
+
+            player.pause();
+            player.src = "";
+            videoContainer.style.display = "none";
+        }
+
+        // Listen for messages from the video selector page
+        window.addEventListener("message", function(event) {
+            if (event.data.command === "playVideo") {
+                playVideo(event.data.videoSrc);
+            } else if (event.data.command === "stopVideo") {
+                stopVideo();
+            }
+        }, false);
+    </script>
 </body>
 </html>
