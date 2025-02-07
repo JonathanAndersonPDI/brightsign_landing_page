@@ -6,42 +6,46 @@
     <title>PDI Landing Page</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&display=swap');
-        
+
         body {
             font-family: 'Libre Franklin', sans-serif;
             background: url('the_bolt.jpg') no-repeat center center fixed;
-            background-size: contain; /* Adjusted to fit within the window */
+            background-size: contain;
+            background-color: black;
             color: white;
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            align-items: flex-start;
             height: 100vh;
+            position: relative;
         }
-        
+
         .logo-container {
             position: absolute;
             top: 20px;
             left: 20px;
         }
-        
+
         .logo-container img {
-            height: 80px; /* Increased size */
+            width: 250px;
+            height: auto;
         }
-        
+
         .qr-container {
             position: absolute;
             bottom: 20px;
             right: 20px;
-            background: white;
-            padding: 15px;
+            background: red;
+            padding: 10px;
             border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
         }
-        
+
         .qr-container img {
-            width: 150px; /* Reduced size */
+            width: 140px;
+            height: auto;
         }
     </style>
 </head>
@@ -49,7 +53,7 @@
     <div class="logo-container">
         <img src="power_design_logo.jpg" alt="Power Design Logo">
     </div>
-    
+
     <div class="qr-container">
         <img src="qr_code.png" alt="QR Code">
     </div>
