@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDI Landing Page</title>
+    <title>Power Design Landing Page</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;700&display=swap');
+        @font-face {
+            font-family: 'Wild Youth';
+            src: url('Wild_Youth.ttf') format('truetype');
+        }
 
         body {
-            font-family: 'Libre Franklin', sans-serif;
-            background: url('the_bolt.jpg') no-repeat center center fixed;
-            background-size: contain;
-            background-color: black;
-            color: white;
             margin: 0;
             padding: 0;
+            background-color: black;
+            background-image: url('the_bolt.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            position: relative;
         }
 
         .logo-container {
@@ -31,127 +33,47 @@
 
         .logo-container img {
             width: 250px;
-            height: auto;
+        }
+
+        .banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #C8102E;
+            color: black;
+            font-family: 'Wild Youth', sans-serif;
+            font-size: 48px;
+            text-align: center;
+            padding: 20px 40px;
+            width: 80%; /* Runs the length of the bolt */
+            max-width: 800px;
+            border-radius: 10px;
         }
 
         .qr-container {
             position: absolute;
             bottom: 20px;
             right: 20px;
-            background: red;
+            background-color: white;
             padding: 10px;
             border-radius: 10px;
         }
 
         .qr-container img {
-            width: 140px;
-            height: auto;
+            width: 150px;
         }
-
-        .banner {
-            background-color: red;
-            padding: 20px 40px;
-            border-radius: 10px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-
-        .banner h1 {
-            font-size: 36px;
-            font-weight: bold;
-            color: black;
-            margin: 0;
-        }
-
-        /* Video Styles */
-        #video-container {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: auto;
-            background: black;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        video {
-            width: 100%;
-            border-radius: 10px;
-        }
-
     </style>
 </head>
 <body>
-
-    <!-- PDI Logo -->
     <div class="logo-container">
         <img src="power_design_logo.jpg" alt="Power Design Logo">
     </div>
-
-    <!-- Red Banner -->
-    <div class="banner" id="banner">
-        <h1>We Are Power Design</h1>
-    </div>
-
-    <!-- Video Container -->
-    <div id="video-container">
-        <video id="videoPlayer" controls>
-            <source src="sample_video.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    </div>
-
-    <!-- QR Code -->
+    
+    <div class="banner">We Are Power Design</div>
+    
     <div class="qr-container">
-        <img src="qr_code.png" alt="QR Code">
+        <img src="qr_code.png" alt="Scan Me">
     </div>
-
-    <script>
-        const videoContainer = document.getElementById('video-container');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const banner = document.getElementById('banner');
-
-        function playVideo(videoFile) {
-            videoPlayer.src = videoFile;
-            videoContainer.style.display = 'block';
-            banner.style.display = 'none';
-            videoPlayer.play();
-        }
-
-        function stopVideo() {
-            videoPlayer.pause();
-            videoPlayer.currentTime = 0;
-            videoContainer.style.display = 'none';
-            banner.style.display = 'block';
-        }
-
-        // Listen for messages from the Video Selector Page
-        window.addEventListener("message", function(event) {
-            if (event.data.type === "play") {
-                playVideo(event.data.video);
-            } else if (event.data.type === "pause") {
-                videoPlayer.pause();
-            } else if (event.data.type === "resume") {
-                videoPlayer.play();
-            } else if (event.data.type === "restart") {
-                videoPlayer.currentTime = 0;
-                videoPlayer.play();
-            } else if (event.data.type === "stop") {
-                stopVideo();
-            }
-        });
-
-        // Auto return to landing page after video ends
-        videoPlayer.addEventListener("ended", function() {
-            stopVideo();
-        });
-    </script>
-
 </body>
 </html>
