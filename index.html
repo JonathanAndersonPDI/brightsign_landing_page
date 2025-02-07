@@ -3,152 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Design Landing Page</title>
+    <title>PDI Landing Page</title>
+    
     <style>
+        /* Import Wild Youth Brush Font */
         @font-face {
             font-family: 'Wild Youth';
-            src: url('Wild Youth.ttf') format('truetype');
+            src: url('WildYouth.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
         }
 
+        /* Global Styles */
         body {
             margin: 0;
             padding: 0;
             background-color: black;
+            overflow: hidden;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             height: 100vh;
             position: relative;
-            overflow: hidden;
         }
 
+        /* Bolt Background */
         .background {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('the_bolt.jpg') no-repeat center center;
-            background-size: contain;
-            z-index: 1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 800px; /* Ensures it fits within the viewport */
+            z-index: -1;
         }
 
+        /* PDI Logo */
         .logo {
             position: absolute;
             top: 20px;
             left: 20px;
-            width: 200px;
-            z-index: 2;
+            width: 200px; /* Adjusted size */
         }
 
+        /* QR Code */
+        .qr-container {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+        }
+
+        /* Banner for "We Are Power Design" */
         .banner {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: red;
-            padding: 20px 40px;
-            border-radius: 10px;
+            padding: 20px;
             text-align: center;
-            z-index: 3;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 10px;
         }
 
         .banner h1 {
-            font-family: 'Wild Youth', sans-serif;
-            font-size: 48px;
+            font-family: 'Wild Youth', cursive;
+            font-size: 64px;
             color: black;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
             margin: 0;
         }
 
-        .qr-container {
+        /* Video Container */
+        #video-container {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background-color: white;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
-            z-index: 3;
-        }
-
-        .qr-container img {
-            width: 150px;
-            height: 150px;
-        }
-
-        /* Video Player Section */
-        .video-container {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: black;
-            justify-content: center;
-            align-items: center;
-            z-index: 4;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 800px;
+            display: none; /* Hidden until triggered */
         }
 
         video {
-            max-width: 90%;
-            max-height: 90%;
+            width: 100%;
+            border-radius: 10px;
         }
+
     </style>
 </head>
 <body>
 
-    <!-- Background -->
-    <div class="background"></div>
-
-    <!-- Logo -->
+    <!-- PDI Logo -->
     <img src="power_design_logo.jpg" alt="Power Design Logo" class="logo">
 
-    <!-- Centered Banner -->
+    <!-- Background Bolt -->
+    <img src="the_bolt.jpg" alt="Bolt Background" class="background">
+
+    <!-- Banner with "We Are Power Design" -->
     <div class="banner">
         <h1>We Are Power Design</h1>
     </div>
 
     <!-- QR Code -->
-    <div class="qr-container">
-        <img src="qr_code.png" alt="Scan to Control Videos">
-    </div>
+    <img src="qr_code.png" alt="Scan to Control Videos" class="qr-container">
 
-    <!-- Video Player -->
-    <div class="video-container" id="videoPlayer">
-        <video id="videoElement" controls>
+    <!-- Video Container -->
+    <div id="video-container">
+        <video id="video-player" controls>
             <source src="" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
 
     <script>
-        function playVideo(videoSrc) {
-            const videoContainer = document.getElementById("videoPlayer");
-            const videoElement = document.getElementById("videoElement");
+        // Function to Play Video
+        function playVideo(videoURL) {
+            const videoPlayer = document.getElementById("video-player");
+            const videoContainer = document.getElementById("video-container");
 
-            videoElement.src = videoSrc;
-            videoContainer.style.display = "flex";
-            videoElement.play();
+            videoPlayer.src = videoURL;
+            videoContainer.style.display = "block"; // Show the video container
+            videoPlayer.play();
+
+            // Hide banner while video plays
+            document.querySelector(".banner").style.display = "none";
         }
 
-        function stopVideo() {
-            const videoContainer = document.getElementById("videoPlayer");
-            const videoElement = document.getElementById("videoElement");
-
-            videoElement.pause();
-            videoElement.currentTime = 0;
-            videoContainer.style.display = "none";
-        }
-
-        // Simulated command from the video selector
-        window.addEventListener("message", (event) => {
-            if (event.data.type === "playVideo") {
-                playVideo(event.data.videoSrc);
-            } else if (event.data.type === "stopVideo") {
-                stopVideo();
-            }
+        // Function to Hide Video & Show Banner Again After Video Ends
+        document.getElementById("video-player").addEventListener("ended", function() {
+            document.getElementById("video-container").style.display = "none";
+            document.querySelector(".banner").style.display = "block";
         });
+
+        // Function to Receive Video Commands from Video Selector Page
+        window.addEventListener("message", function(event) {
+            if (event.data.type === "playVideo") {
+                playVideo(event.data.videoURL);
+            }
+        }, false);
     </script>
 
 </body>
