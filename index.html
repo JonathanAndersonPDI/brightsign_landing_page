@@ -77,7 +77,7 @@
 
     <div class="background"></div>
     <img src="power_design_logo.jpg" alt="PDI Logo" class="logo">
-    <div class="banner">We Are Power Design</div>
+    <div class="banner" id="banner">We Are Power Design</div>
     <img src="qr_code.png" alt="QR Code" class="qr-container">
 
     <!-- Video Player -->
@@ -89,10 +89,29 @@
     </div>
 
     <script>
-        const ws = new WebSocket("ws://yourserver-ip:8080");
+        function playVideo(video) {
+            let videoURLs = {
+                "video1.mp4": "https://drive.google.com/uc?export=download&id=1Mu_ZZN7RiM8okE4Dc1ChVksaSRP1MxbE",
+                "video2.mp4": "https://drive.google.com/uc?export=download&id=18szLYTFuRqLO5XjCqwsNkmFxUaDyV4ih",
+                "video3.mp4": "https://drive.google.com/uc?export=download&id=1iTcXj-LLhihcsCUxIaWh_peZe7qKygzD"
+            };
 
-        ws.onmessage = function(event) {
-            let data = JSON.parse(event.data);
+            if (videoURLs[video]) {
+                document.getElementById("videoSource").src = videoURLs[video];
+                document.getElementById("videoPlayer").load();
+                document.getElementById("videoWrapper").style.display = "flex";
+                document.getElementById("banner").style.display = "none"; // Hide the banner while playing
+            }
+        }
+
+        function returnToLanding() {
+            document.getElementById("videoWrapper").style.display = "none";
+            document.getElementById("videoSource").src = "";
+            document.getElementById("banner").style.display = "block"; // Show banner after video ends
+        }
+
+        window.addEventListener("message", function(event) {
+            let data = event.data;
             if (data.command === "play") {
                 playVideo(data.video);
             } else if (data.command === "pause") {
@@ -105,26 +124,7 @@
             } else if (data.command === "stop") {
                 returnToLanding();
             }
-        };
-
-        function playVideo(video) {
-            let videoURLs = {
-                "video1.mp4": "https://drive.google.com/uc?export=download&id=1Mu_ZZN7RiM8okE4Dc1ChVksaSRP1MxbE",
-                "video2.mp4": "https://drive.google.com/uc?export=download&id=18szLYTFuRqLO5XjCqwsNkmFxUaDyV4ih",
-                "video3.mp4": "https://drive.google.com/uc?export=download&id=1iTcXj-LLhihcsCUxIaWh_peZe7qKygzD"
-            };
-
-            if (videoURLs[video]) {
-                document.getElementById("videoSource").src = videoURLs[video];
-                document.getElementById("videoPlayer").load();
-                document.getElementById("videoWrapper").style.display = "flex";
-            }
-        }
-
-        function returnToLanding() {
-            document.getElementById("videoWrapper").style.display = "none";
-            document.getElementById("videoSource").src = "";
-        }
+        }, false);
     </script>
 
 </body>
