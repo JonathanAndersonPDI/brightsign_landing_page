@@ -17,8 +17,8 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            align-items: flex-start;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
             position: relative;
         }
@@ -47,15 +47,111 @@
             width: 140px;
             height: auto;
         }
+
+        .banner {
+            background-color: red;
+            padding: 20px 40px;
+            border-radius: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .banner h1 {
+            font-size: 36px;
+            font-weight: bold;
+            color: black;
+            margin: 0;
+        }
+
+        /* Video Styles */
+        #video-container {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: auto;
+            background: black;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 10px;
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- PDI Logo -->
     <div class="logo-container">
         <img src="power_design_logo.jpg" alt="Power Design Logo">
     </div>
 
+    <!-- Red Banner -->
+    <div class="banner" id="banner">
+        <h1>We Are Power Design</h1>
+    </div>
+
+    <!-- Video Container -->
+    <div id="video-container">
+        <video id="videoPlayer" controls>
+            <source src="sample_video.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- QR Code -->
     <div class="qr-container">
         <img src="qr_code.png" alt="QR Code">
     </div>
+
+    <script>
+        const videoContainer = document.getElementById('video-container');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const banner = document.getElementById('banner');
+
+        function playVideo(videoFile) {
+            videoPlayer.src = videoFile;
+            videoContainer.style.display = 'block';
+            banner.style.display = 'none';
+            videoPlayer.play();
+        }
+
+        function stopVideo() {
+            videoPlayer.pause();
+            videoPlayer.currentTime = 0;
+            videoContainer.style.display = 'none';
+            banner.style.display = 'block';
+        }
+
+        // Listen for messages from the Video Selector Page
+        window.addEventListener("message", function(event) {
+            if (event.data.type === "play") {
+                playVideo(event.data.video);
+            } else if (event.data.type === "pause") {
+                videoPlayer.pause();
+            } else if (event.data.type === "resume") {
+                videoPlayer.play();
+            } else if (event.data.type === "restart") {
+                videoPlayer.currentTime = 0;
+                videoPlayer.play();
+            } else if (event.data.type === "stop") {
+                stopVideo();
+            }
+        });
+
+        // Auto return to landing page after video ends
+        videoPlayer.addEventListener("ended", function() {
+            stopVideo();
+        });
+    </script>
+
 </body>
 </html>
