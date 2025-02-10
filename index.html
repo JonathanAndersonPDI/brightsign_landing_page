@@ -33,41 +33,61 @@
     </div>
 
     <script>
-        const ws = new WebSocket("ws://localhost:8080");
+        let ws; // Declare WebSocket globally
+
+        function initializeWebSocket() {
+            ws = new WebSocket("ws://localhost:8080");
+
+            ws.onopen = () => {
+                console.log("Connected to WebSocket server.");
+            };
+
+            ws.onmessage = async (event) => {
+                try {
+                    let data;
+                    
+                    // Handle Blob data from WebSocket
+                    if (event.data instanceof Blob) {
+                        let text = await event.data.text();
+                        data = JSON.parse(text);
+                    } else {
+                        data = JSON.parse(event.data);
+                    }
+
+                    console.log("Received message:", data);
+
+                    if (data.command === "play") {
+                        playVideo(data.video);
+                    } else if (data.command === "pause") {
+                        videoPlayer.pause();
+                    } else if (data.command === "resume") {
+                        videoPlayer.play();
+                    } else if (data.command === "restart") {
+                        videoPlayer.currentTime = 0;
+                        videoPlayer.play();
+                    } else if (data.command === "stop") {
+                        stopVideo();
+                    }
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error("WebSocket error:", error);
+            };
+
+            ws.onclose = () => {
+                console.warn("WebSocket closed. Reconnecting in 3 seconds...");
+                setTimeout(initializeWebSocket, 3000);
+            };
+        }
+
+        initializeWebSocket(); // Start WebSocket connection
+
         const videoContainer = document.getElementById("videoContainer");
         const videoPlayer = document.getElementById("videoPlayer");
         const videoSource = document.getElementById("videoSource");
-
-        ws.onmessage = async (event) => {
-            try {
-                let data;
-                
-                // Handle Blob data from WebSocket
-                if (event.data instanceof Blob) {
-                    let text = await event.data.text(); 
-                    data = JSON.parse(text);
-                } else {
-                    data = JSON.parse(event.data);
-                }
-
-                console.log("Received message:", data);
-
-                if (data.command === "play") {
-                    playVideo(data.video);
-                } else if (data.command === "pause") {
-                    videoPlayer.pause();
-                } else if (data.command === "resume") {
-                    videoPlayer.play();
-                } else if (data.command === "restart") {
-                    videoPlayer.currentTime = 0;
-                    videoPlayer.play();
-                } else if (data.command === "stop") {
-                    stopVideo();
-                }
-            } catch (error) {
-                console.error("Error processing WebSocket message:", error);
-            }
-        };
 
         function playVideo(videoUrl) {
             console.log("Playing video:", videoUrl);
