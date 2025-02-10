@@ -3,104 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Design Landing</title>
-
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
-
+    <title>Power Design</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <style>
         body {
             background-color: black;
-            color: white;
-            font-family: 'Libre Franklin', sans-serif;
             text-align: center;
-            overflow: hidden;
+            color: white;
         }
-        .background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('the_bolt.jpg') center/contain no-repeat;
-            z-index: -1;
-        }
-        .logo {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 200px;
-        }
-        .qr-code {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 150px;
-        }
-        .video-container {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+        #videoContainer {
             display: none;
         }
         video {
-            width: 80vw;
-            height: auto;
-            max-height: 80vh;
-            border: 2px solid white;
+            width: 80%;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-
-    <img src="power_design_logo.jpg" alt="Power Design Logo" class="logo">
-    <div class="background"></div>
-
-    <div class="video-container" id="videoContainer">
+    <img src="power_design_logo.jpg" alt="Power Design" width="200px">
+    <div id="videoContainer">
         <video id="videoPlayer" controls>
             <source id="videoSource" src="" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
 
-    <img src="qr_code.png" alt="QR Code" class="qr-code">
-
     <script>
         const ws = new WebSocket("ws://localhost:8080");
+        const videoContainer = document.getElementById("videoContainer");
+        const videoPlayer = document.getElementById("videoPlayer");
+        const videoSource = document.getElementById("videoSource");
 
         ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                const videoContainer = document.getElementById("videoContainer");
-                const videoPlayer = document.getElementById("videoPlayer");
-                const videoSource = document.getElementById("videoSource");
-
-                if (data.command === "play") {
-                    videoSource.src = `http://localhost:3000/videos/${data.video}`;
-                    videoPlayer.load();
-                    videoContainer.style.display = "block";
-                    videoPlayer.play();
-                } else if (data.command === "pause") {
-                    videoPlayer.pause();
-                } else if (data.command === "resume") {
-                    videoPlayer.play();
-                } else if (data.command === "restart") {
-                    videoPlayer.currentTime = 0;
-                    videoPlayer.play();
-                } else if (data.command === "stop") {
-                    videoContainer.style.display = "none";
-                    videoPlayer.pause();
-                    videoSource.src = "";
-                }
-            } catch (error) {
-                console.error("Error parsing WebSocket message:", error);
+            const message = JSON.parse(event.data);
+            
+            if (message.command === "play") {
+                videoSource.src = `http://localhost:3000/videos/${message.video}`;
+                videoPlayer.load();
+                videoContainer.style.display = "block";
+                videoPlayer.play();
+            } else if (message.command === "pause") {
+                videoPlayer.pause();
+            } else if (message.command === "resume") {
+                videoPlayer.play();
+            } else if (message.command === "restart") {
+                videoPlayer.currentTime = 0;
+                videoPlayer.play();
+            } else if (message.command === "stop") {
+                videoContainer.style.display = "none";
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0;
             }
         };
     </script>
-
 </body>
 </html>
