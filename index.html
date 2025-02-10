@@ -3,87 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Design Landing Page</title>
+    <title>Landing Page</title>
+
+    <!-- Favicon Links -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+
     <style>
         body {
             background-color: black;
             color: white;
             font-family: 'Libre Franklin', sans-serif;
             text-align: center;
-            margin: 0;
-            overflow: hidden;
         }
-        #logo {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 150px;
-        }
-        #qr-code {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 150px;
-        }
-        #videoPlayer {
+        video {
             display: none;
-            width: 100%;
-            height: 100vh;
-        }
-        #welcomeContent {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            font-size: 36px;
-            color: black;
-            background: red;
-            padding: 20px;
-            border-radius: 10px;
+            width: 80%;
+            margin: auto;
         }
     </style>
 </head>
 <body>
 
-    <img id="logo" src="power_design_logo.jpg" alt="Power Design Logo">
-    
-    <div id="welcomeContent">We Are Power Design</div>
-
-    <video id="videoPlayer" controls>
-        <source id="videoSource" src="" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-
-    <img id="qr-code" src="qr_code.png" alt="Scan to Control Videos">
+    <h1>Welcome to Power Design</h1>
+    <video id="videoPlayer" controls></video>
 
     <script>
         const ws = new WebSocket("ws://localhost:8080");
 
-        ws.onopen = () => {
-            console.log("Connected to WebSocket server.");
-        };
+        ws.onopen = () => console.log("Connected to WebSocket server.");
+        ws.onclose = () => console.log("WebSocket connection closed.");
+        ws.onerror = (error) => console.log("WebSocket error:", error);
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
+            const videoElement = document.getElementById("videoPlayer");
 
-            if (data.command === "play") {
-                document.getElementById("welcomeContent").style.display = "none";
-                document.getElementById("videoPlayer").style.display = "block";
-                document.getElementById("videoSource").src = `http://localhost:3000/video/${data.video}`;
-                document.getElementById("videoPlayer").load();
-                document.getElementById("videoPlayer").play();
-            } else if (data.command === "pause") {
-                document.getElementById("videoPlayer").pause();
-            } else if (data.command === "resume") {
-                document.getElementById("videoPlayer").play();
-            } else if (data.command === "restart") {
-                document.getElementById("videoPlayer").currentTime = 0;
-                document.getElementById("videoPlayer").play();
-            } else if (data.command === "stop") {
-                document.getElementById("videoPlayer").pause();
-                document.getElementById("videoPlayer").style.display = "none";
-                document.getElementById("welcomeContent").style.display = "block";
+            if (data.action === "play") {
+                videoElement.src = `http://localhost:8080/videos/${data.video}`;
+                videoElement.style.display = "block";
+                videoElement.play();
+            } else if (data.action === "pause") {
+                videoElement.pause();
+            } else if (data.action === "resume") {
+                videoElement.play();
+            } else if (data.action === "restart") {
+                videoElement.currentTime = 0;
+                videoElement.play();
+            } else if (data.action === "stop") {
+                videoElement.pause();
+                videoElement.style.display = "none";
             }
         };
     </script>
