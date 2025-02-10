@@ -37,26 +37,37 @@
         ws.onclose = () => console.log("WebSocket connection closed.");
         ws.onerror = (error) => console.log("WebSocket error:", error);
 
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            const videoElement = document.getElementById("videoPlayer");
-
+        ws.onmessage = async (event) => {
+    try {
+        // Check if the message is a Blob
+        if (event.data instanceof Blob) {
+            // Convert Blob to text before parsing
+            const textData = await event.data.text();
+            const data = JSON.parse(textData);
+            
             if (data.action === "play") {
-                videoElement.src = `http://localhost:8080/videos/${data.video}`;
-                videoElement.style.display = "block";
-                videoElement.play();
+                playVideo(data.video);
             } else if (data.action === "pause") {
-                videoElement.pause();
+                pauseVideo();
             } else if (data.action === "resume") {
-                videoElement.play();
+                resumeVideo();
             } else if (data.action === "restart") {
-                videoElement.currentTime = 0;
-                videoElement.play();
+                restartVideo();
             } else if (data.action === "stop") {
-                videoElement.pause();
-                videoElement.style.display = "none";
+                stopVideo();
             }
-        };
+        } else {
+            // Directly parse if it's already a string
+            const data = JSON.parse(event.data);
+            if (data.action === "play") {
+                playVideo(data.video);
+            }
+        }
+    } catch (error) {
+        console.error("Error processing WebSocket message:", error);
+    }
+};
+
     </script>
 
 </body>
