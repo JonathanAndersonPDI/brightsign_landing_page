@@ -37,27 +37,30 @@
         const videoPlayer = document.getElementById("videoPlayer");
         const videoSource = document.getElementById("videoSource");
 
-        ws.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            
-            if (message.command === "play") {
-                videoSource.src = `http://localhost:3000/videos/${message.video}`;
-                videoPlayer.load();
-                videoContainer.style.display = "block";
-                videoPlayer.play();
-            } else if (message.command === "pause") {
-                videoPlayer.pause();
-            } else if (message.command === "resume") {
-                videoPlayer.play();
-            } else if (message.command === "restart") {
-                videoPlayer.currentTime = 0;
-                videoPlayer.play();
-            } else if (message.command === "stop") {
-                videoContainer.style.display = "none";
-                videoPlayer.pause();
-                videoPlayer.currentTime = 0;
+        ws.onmessage = async (event) => {
+    try {
+        // Handle Blob data
+        if (event.data instanceof Blob) {
+            let text = await event.data.text(); // Convert Blob to text
+            let data = JSON.parse(text); // Parse JSON
+            console.log("Received message:", data);
+
+            if (data.command === "play") {
+                playVideo(data.video);
             }
-        };
+        } else {
+            let data = JSON.parse(event.data);
+            console.log("Received message:", data);
+
+            if (data.command === "play") {
+                playVideo(data.video);
+            }
+        }
+    } catch (error) {
+        console.error("Error processing WebSocket message:", error);
+    }
+};
+
     </script>
 </body>
 </html>
