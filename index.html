@@ -12,183 +12,94 @@
     <link rel="manifest" href="site.webmanifest">
 
     <style>
-        /* General Styles */
         body {
-            margin: 0;
-            padding: 0;
             background-color: black;
             color: white;
             font-family: 'Libre Franklin', sans-serif;
             text-align: center;
             overflow: hidden;
         }
-
-        /* Background with "The Bolt" */
-        #background {
+        .background {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 100%;
+            background: url('the_bolt.jpg') center/contain no-repeat;
             z-index: -1;
         }
-
-        #background img {
-            max-width: 90%;
-            max-height: 90%;
-            opacity: 0.2;
-        }
-
-        /* Power Design Logo */
-        #logo {
+        .logo {
             position: absolute;
             top: 20px;
             left: 20px;
+            width: 200px;
         }
-
-        #logo img {
-            width: 220px;
-        }
-
-        /* Red Banner with Text */
-        #banner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: red;
-            padding: 15px 40px;
-            border-radius: 10px;
-            font-size: 28px;
-            font-weight: bold;
-            color: black;
-            text-transform: uppercase;
-            font-family: 'Wild Youth', sans-serif;
-        }
-
-        /* QR Code Box */
-        #qr-container {
+        .qr-code {
             position: absolute;
             bottom: 20px;
             right: 20px;
-            background: white;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.5);
+            width: 150px;
         }
-
-        #qr-container img {
-            width: 120px;
-        }
-
-        /* Video Player */
-        #video-container {
-            display: none;
+        .video-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
         }
-
-        #video-player {
-            width: 80%;
-            max-height: 80%;
-            border-radius: 10px;
+        video {
+            width: 80vw;
+            height: auto;
+            max-height: 80vh;
+            border: 2px solid white;
         }
     </style>
 </head>
 <body>
 
-    <!-- Background -->
-    <div id="background">
-        <img src="the_bolt.jpg" alt="Bolt Logo">
-    </div>
+    <img src="power_design_logo.jpg" alt="Power Design Logo" class="logo">
+    <div class="background"></div>
 
-    <!-- Power Design Logo -->
-    <div id="logo">
-        <img src="power_design_logo.jpg" alt="Power Design Logo">
-    </div>
-
-    <!-- Red Banner -->
-    <div id="banner">
-        We Are Power Design
-    </div>
-
-    <!-- QR Code -->
-    <div id="qr-container">
-        <img src="qr_code.png" alt="Scan QR Code">
-    </div>
-
-    <!-- Video Player -->
-    <div id="video-container">
-        <video id="video-player" controls>
-            <source id="video-source" src="" type="video/mp4">
+    <div class="video-container" id="videoContainer">
+        <video id="videoPlayer" controls>
+            <source id="videoSource" src="" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
 
+    <img src="qr_code.png" alt="QR Code" class="qr-code">
+
     <script>
         const ws = new WebSocket("ws://localhost:8080");
 
-        ws.onopen = () => {
-            console.log("Connected to WebSocket server.");
-        };
-
-        ws.onmessage = async (event) => {
+        ws.onmessage = (event) => {
             try {
-                let data;
+                const data = JSON.parse(event.data);
+                const videoContainer = document.getElementById("videoContainer");
+                const videoPlayer = document.getElementById("videoPlayer");
+                const videoSource = document.getElementById("videoSource");
 
-                // Check if event data is a Blob
-                if (event.data instanceof Blob) {
-                    const textData = await event.data.text();
-                    data = JSON.parse(textData);
-                } else {
-                    data = JSON.parse(event.data);
-                }
-
-                if (data.action === "play") {
-                    playVideo(data.video);
-                } else if (data.action === "pause") {
-                    document.getElementById("video-player").pause();
-                } else if (data.action === "resume") {
-                    document.getElementById("video-player").play();
-                } else if (data.action === "restart") {
-                    const video = document.getElementById("video-player");
-                    video.currentTime = 0;
-                    video.play();
-                } else if (data.action === "stop") {
-                    stopVideo();
+                if (data.command === "play") {
+                    videoSource.src = `http://localhost:3000/videos/${data.video}`;
+                    videoPlayer.load();
+                    videoContainer.style.display = "block";
+                    videoPlayer.play();
+                } else if (data.command === "pause") {
+                    videoPlayer.pause();
+                } else if (data.command === "resume") {
+                    videoPlayer.play();
+                } else if (data.command === "restart") {
+                    videoPlayer.currentTime = 0;
+                    videoPlayer.play();
+                } else if (data.command === "stop") {
+                    videoContainer.style.display = "none";
+                    videoPlayer.pause();
+                    videoSource.src = "";
                 }
             } catch (error) {
-                console.error("Error processing WebSocket message:", error);
+                console.error("Error parsing WebSocket message:", error);
             }
         };
-
-        function playVideo(videoUrl) {
-            const player = document.getElementById("video-player");
-            const source = document.getElementById("video-source");
-
-            source.src = videoUrl;
-            player.load();
-            player.play();
-
-            document.getElementById("video-container").style.display = "flex";
-        }
-
-        function stopVideo() {
-            const player = document.getElementById("video-player");
-            player.pause();
-            player.currentTime = 0;
-            document.getElementById("video-container").style.display = "none";
-        }
     </script>
 
 </body>
