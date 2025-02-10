@@ -3,71 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Landing Page</title>
-
-    <!-- Favicon Links -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <link rel="manifest" href="site.webmanifest">
-
-    <style>
-        body {
-            background-color: black;
-            color: white;
-            font-family: 'Libre Franklin', sans-serif;
-            text-align: center;
-        }
-        video {
-            display: none;
-            width: 80%;
-            margin: auto;
-        }
-    </style>
+    <title>Power Design Landing</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
 </head>
 <body>
 
-    <h1>Welcome to Power Design</h1>
-    <video id="videoPlayer" controls></video>
+    <!-- Background with "The Bolt" -->
+    <div id="background">
+        <img src="the_bolt.jpg" alt="Bolt Logo" id="bolt">
+    </div>
+
+    <!-- Power Design Logo -->
+    <div id="logo">
+        <img src="power_design_logo.jpg" alt="Power Design Logo">
+    </div>
+
+    <!-- Red Banner with Text -->
+    <div id="banner">
+        <p>We Are Power Design</p>
+    </div>
+
+    <!-- QR Code Box -->
+    <div id="qr-container">
+        <img src="qr_code.png" alt="Scan QR Code">
+    </div>
+
+    <!-- Video Player -->
+    <div id="video-container">
+        <video id="video-player" controls>
+            <source id="video-source" src="" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
 
     <script>
         const ws = new WebSocket("ws://localhost:8080");
 
-        ws.onopen = () => console.log("Connected to WebSocket server.");
-        ws.onclose = () => console.log("WebSocket connection closed.");
-        ws.onerror = (error) => console.log("WebSocket error:", error);
+        ws.onopen = () => {
+            console.log("Connected to WebSocket server.");
+        };
 
         ws.onmessage = async (event) => {
-    try {
-        // Check if the message is a Blob
-        if (event.data instanceof Blob) {
-            // Convert Blob to text before parsing
-            const textData = await event.data.text();
-            const data = JSON.parse(textData);
-            
-            if (data.action === "play") {
-                playVideo(data.video);
-            } else if (data.action === "pause") {
-                pauseVideo();
-            } else if (data.action === "resume") {
-                resumeVideo();
-            } else if (data.action === "restart") {
-                restartVideo();
-            } else if (data.action === "stop") {
-                stopVideo();
-            }
-        } else {
-            // Directly parse if it's already a string
-            const data = JSON.parse(event.data);
-            if (data.action === "play") {
-                playVideo(data.video);
-            }
-        }
-    } catch (error) {
-        console.error("Error processing WebSocket message:", error);
-    }
-};
+            try {
+                let data;
 
+                // Check if event data is a Blob
+                if (event.data instanceof Blob) {
+                    const textData = await event.data.text();
+                    data = JSON.parse(textData);
+                } else {
+                    data = JSON.parse(event.data);
+                }
+
+                if (data.action === "play") {
+                    playVideo(data.video);
+                } else if (data.action === "pause") {
+                    document.getElementById("video-player").pause();
+                } else if (data.action === "resume") {
+                    document.getElementById("video-player").play();
+                } else if (data.action === "restart") {
+                    const video = document.getElementById("video-player");
+                    video.currentTime = 0;
+                    video.play();
+                } else if (data.action === "stop") {
+                    stopVideo();
+                }
+            } catch (error) {
+                console.error("Error processing WebSocket message:", error);
+            }
+        };
+
+        function playVideo(videoUrl) {
+            const player = document.getElementById("video-player");
+            const source = document.getElementById("video-source");
+
+            source.src = videoUrl;
+            player.load();
+            player.play();
+
+            document.getElementById("video-container").style.display = "block";
+        }
+
+        function stopVideo() {
+            const player = document.getElementById("video-player");
+            player.pause();
+            player.currentTime = 0;
+            document.getElementById("video-container").style.display = "none";
+        }
     </script>
 
 </body>
