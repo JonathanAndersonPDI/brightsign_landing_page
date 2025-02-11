@@ -38,35 +38,32 @@
             console.log("✅ WebSocket connected successfully on Landing Page!");
         };
 
+        ws.onerror = (error) => {
+            console.error("❌ WebSocket Error on Landing Page:", error);
+        };
+
         const videoContainer = document.getElementById("videoContainer");
         const videoPlayer = document.getElementById("videoPlayer");
         const videoSource = document.getElementById("videoSource");
 
         ws.onmessage = async (event) => {
             try {
-                if (event.data instanceof Blob) {
-                    let text = await event.data.text();
-                    let data = JSON.parse(text);
-                    console.log("Received message:", data);
+                console.log("📥 Message received:", event.data);
+                let data = JSON.parse(event.data);
 
-                    if (data.command === "play") {
-                        playVideo(data.video);
-                    }
+                if (data.command === "play") {
+                    playVideo(data.video);
                 } else {
-                    let data = JSON.parse(event.data);
-                    console.log("Received message:", data);
-
-                    if (data.command === "play") {
-                        playVideo(data.video);
-                    }
+                    console.warn("⚠️ Unknown command received:", data);
                 }
             } catch (error) {
-                console.error("Error processing WebSocket message:", error);
+                console.error("❌ Error processing WebSocket message:", error);
             }
         };
 
         function playVideo(videoUrl) {
-            videoSource.src = videoUrl;
+            console.log("🎬 Playing video:", videoUrl);
+            videoSource.src = "/videos/" + videoUrl; // Ensure path matches video directory
             videoPlayer.load();
             videoContainer.style.display = "block";
             videoPlayer.play();
