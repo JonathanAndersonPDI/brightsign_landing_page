@@ -22,10 +22,27 @@
             width: 80%;
             margin-top: 20px;
         }
+        #interactionPrompt {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <img src="power_design_logo.jpg" alt="Power Design" width="200px">
+
+    <div id="interactionPrompt" onclick="resumePlayback()">
+        Tap anywhere to resume video playback.
+    </div>
 
     <div id="videoContainer">
         <video id="videoPlayer" controls>
@@ -39,19 +56,19 @@
         const videoContainer = document.getElementById("videoContainer");
         const videoPlayer = document.getElementById("videoPlayer");
         const videoSource = document.getElementById("videoSource");
+        const interactionPrompt = document.getElementById("interactionPrompt");
 
         // Log WebSocket connection
         ws.onopen = () => {
             console.log("✅ WebSocket connected successfully on Landing Page!");
         };
 
-        // Handle incoming WebSocket messages, including Blob handling
         ws.onmessage = async (event) => {
             try {
                 let data;
 
                 if (event.data instanceof Blob) {
-                    let text = await event.data.text(); // Convert Blob to text
+                    let text = await event.data.text();
                     data = JSON.parse(text);
                 } else {
                     data = JSON.parse(event.data);
@@ -64,13 +81,12 @@
                 } else if (data.command === "pause") {
                     videoPlayer.pause();
                 } else if (data.command === "resume") {
-                    videoPlayer.play().catch(error => console.warn("Autoplay prevented, waiting for user interaction."));
+                    videoPlayer.play().catch(() => showInteractionPrompt());
                 } else if (data.command === "restart") {
                     videoPlayer.currentTime = 0;
-                    videoPlayer.play().catch(error => console.warn("Autoplay prevented, waiting for user interaction."));
+                    videoPlayer.play().catch(() => showInteractionPrompt());
                 } else if (data.command === "stop") {
-                    console.log("🔄 Refreshing Landing Page...");
-                    location.reload(); // Force page refresh
+                    location.reload();
                 }
             } catch (error) {
                 console.error("❌ Error processing WebSocket message:", error);
@@ -81,15 +97,21 @@
             console.log("▶️ Playing video:", video);
             videoSource.src = `/videos/${video}`;
             videoPlayer.load();
-
-            // Display the video container
             videoContainer.style.display = "block";
-
-            // Attempt to play the video with user interaction fallback
+            
             let playPromise = videoPlayer.play();
             if (playPromise !== undefined) {
-                playPromise.catch(error => console.warn("⚠️ Autoplay blocked. User interaction needed."));
+                playPromise.catch(() => showInteractionPrompt());
             }
+        }
+
+        function showInteractionPrompt() {
+            interactionPrompt.style.display = "block";
+        }
+
+        function resumePlayback() {
+            interactionPrompt.style.display = "none";
+            videoPlayer.play();
         }
     </script>
 </body>
