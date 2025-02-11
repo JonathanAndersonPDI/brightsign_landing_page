@@ -40,60 +40,49 @@
         const videoPlayer = document.getElementById("videoPlayer");
         const videoSource = document.getElementById("videoSource");
 
+        // Log WebSocket connection
+        ws.onopen = () => {
+            console.log("✅ WebSocket connected successfully on Landing Page!");
+        };
+
+        // Handle incoming WebSocket messages, including Blob handling
         ws.onmessage = async (event) => {
             try {
+                let data;
+
                 if (event.data instanceof Blob) {
-                    let text = await event.data.text();
-                    let data = JSON.parse(text);
-                    console.log("Received message:", data);
-
-                    if (data.command === "play") {
-                        playVideo(data.video);
-                    }
+                    let text = await event.data.text(); // Convert Blob to text
+                    data = JSON.parse(text);
                 } else {
-                    let data = JSON.parse(event.data);
-                    console.log("Received message:", data);
+                    data = JSON.parse(event.data);
+                }
 
-                    if (data.command === "play") {
-                        playVideo(data.video);
-                    }
+                console.log("📩 Received message:", data);
+
+                if (data.command === "play") {
+                    playVideo(data.video);
+                } else if (data.command === "pause") {
+                    videoPlayer.pause();
+                } else if (data.command === "resume") {
+                    videoPlayer.play();
+                } else if (data.command === "restart") {
+                    videoPlayer.currentTime = 0;
+                    videoPlayer.play();
+                } else if (data.command === "stop") {
+                    videoPlayer.pause();
+                    videoContainer.style.display = "none"; // Hide video when stopping
                 }
             } catch (error) {
-                console.error("Error processing WebSocket message:", error);
+                console.error("❌ Error processing WebSocket message:", error);
             }
         };
 
-        // ✅ **Updated `playVideo` function (Fixes autoplay and video loading issues)**
         function playVideo(video) {
-            console.log("Playing video:", video);
-
-            videoSource.src = `/videos/${video}`;  // Ensure correct path
-            videoPlayer.load(); // Ensure the browser recognizes the new video source
-
-            // Require a user interaction before playing
+            console.log("▶️ Playing video:", video);
+            videoSource.src = `/videos/${video}`;
+            videoPlayer.load();
             videoContainer.style.display = "block";
-
-            // ✅ **NEW: Add a play button overlay if autoplay is blocked**
-            let playOverlay = document.createElement("button");
-            playOverlay.innerText = "Play Video";
-            playOverlay.style.position = "absolute";
-            playOverlay.style.top = "50%";
-            playOverlay.style.left = "50%";
-            playOverlay.style.transform = "translate(-50%, -50%)";
-            playOverlay.style.padding = "20px";
-            playOverlay.style.fontSize = "18px";
-            playOverlay.style.backgroundColor = "red";
-            playOverlay.style.color = "white";
-            playOverlay.style.border = "none";
-            playOverlay.style.cursor = "pointer";
-            playOverlay.style.zIndex = "10";
-
-            document.body.appendChild(playOverlay);
-
-            playOverlay.onclick = function () {
-                videoPlayer.play();
-                document.body.removeChild(playOverlay); // Remove the overlay after interaction
-            };
+            videoPlayer.play();
         }
     </script>
 </body>
