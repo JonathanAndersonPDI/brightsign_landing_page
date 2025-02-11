@@ -64,10 +64,10 @@
                 } else if (data.command === "pause") {
                     videoPlayer.pause();
                 } else if (data.command === "resume") {
-                    videoPlayer.play();
+                    videoPlayer.play().catch(error => console.warn("Autoplay prevented, waiting for user interaction."));
                 } else if (data.command === "restart") {
                     videoPlayer.currentTime = 0;
-                    videoPlayer.play();
+                    videoPlayer.play().catch(error => console.warn("Autoplay prevented, waiting for user interaction."));
                 } else if (data.command === "stop") {
                     console.log("🔄 Refreshing Landing Page...");
                     location.reload(); // Force page refresh
@@ -81,8 +81,15 @@
             console.log("▶️ Playing video:", video);
             videoSource.src = `/videos/${video}`;
             videoPlayer.load();
+
+            // Display the video container
             videoContainer.style.display = "block";
-            videoPlayer.play();
+
+            // Attempt to play the video with user interaction fallback
+            let playPromise = videoPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => console.warn("⚠️ Autoplay blocked. User interaction needed."));
+            }
         }
     </script>
 </body>
