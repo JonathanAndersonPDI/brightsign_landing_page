@@ -48,13 +48,23 @@
 
         ws.onmessage = async (event) => {
             try {
-                console.log("📥 Message received:", event.data);
-                let data = JSON.parse(event.data);
+                if (event.data instanceof Blob) {
+                    // If data is a Blob, convert it to text before parsing
+                    let textData = await event.data.text();
+                    let data = JSON.parse(textData);
+                    console.log("📥 Received Blob message:", data);
 
-                if (data.command === "play") {
-                    playVideo(data.video);
+                    if (data.command === "play") {
+                        playVideo(data.video);
+                    }
                 } else {
-                    console.warn("⚠️ Unknown command received:", data);
+                    // If data is already JSON, parse normally
+                    let data = JSON.parse(event.data);
+                    console.log("📥 Received JSON message:", data);
+
+                    if (data.command === "play") {
+                        playVideo(data.video);
+                    }
                 }
             } catch (error) {
                 console.error("❌ Error processing WebSocket message:", error);
