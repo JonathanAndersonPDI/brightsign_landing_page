@@ -69,8 +69,8 @@
                     videoPlayer.currentTime = 0;
                     videoPlayer.play();
                 } else if (data.command === "stop") {
-                    videoPlayer.pause();
-                    videoContainer.style.display = "none"; // Hide video when stopping
+                    console.log("🔄 Refreshing Landing Page...");
+                    location.reload(); // Force page refresh
                 }
             } catch (error) {
                 console.error("❌ Error processing WebSocket message:", error);
