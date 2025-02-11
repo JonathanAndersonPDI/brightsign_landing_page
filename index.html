@@ -11,7 +11,6 @@
             background-color: black;
             text-align: center;
             color: white;
-            font-family: Arial, sans-serif;
         }
         #videoContainer {
             display: none;
@@ -33,83 +32,44 @@
     </div>
 
     <script>
-        let ws; // Declare WebSocket globally
+        const ws = new WebSocket("ws://localhost:8080");
 
-        function initializeWebSocket() {
-            ws = new WebSocket("ws://localhost:8080");
-
-            ws.onopen = () => {
-                console.log("Connected to WebSocket server.");
-            };
-
-            ws.onmessage = async (event) => {
-                try {
-                    let data;
-                    
-                    // Handle Blob data from WebSocket
-                    if (event.data instanceof Blob) {
-                        let text = await event.data.text();
-                        data = JSON.parse(text);
-                    } else {
-                        data = JSON.parse(event.data);
-                    }
-
-                    console.log("Received message:", data);
-
-                    if (data.command === "play") {
-                        playVideo(data.video);
-                    } else if (data.command === "pause") {
-                        videoPlayer.pause();
-                    } else if (data.command === "resume") {
-                        videoPlayer.play();
-                    } else if (data.command === "restart") {
-                        videoPlayer.currentTime = 0;
-                        videoPlayer.play();
-                    } else if (data.command === "stop") {
-                        stopVideo();
-                    }
-                } catch (error) {
-                    console.error("Error processing WebSocket message:", error);
-                }
-            };
-
-            ws.onerror = (error) => {
-                console.error("WebSocket error:", error);
-            };
-
-            ws.onclose = () => {
-                console.warn("WebSocket closed. Reconnecting in 3 seconds...");
-                setTimeout(initializeWebSocket, 3000);
-            };
-        }
-
-        initializeWebSocket(); // Start WebSocket connection
+        ws.onopen = () => {
+            console.log("✅ WebSocket connected successfully on Landing Page!");
+        };
 
         const videoContainer = document.getElementById("videoContainer");
         const videoPlayer = document.getElementById("videoPlayer");
         const videoSource = document.getElementById("videoSource");
 
-        function playVideo(videoUrl) {
-            console.log("Playing video:", videoUrl);
+        ws.onmessage = async (event) => {
+            try {
+                if (event.data instanceof Blob) {
+                    let text = await event.data.text();
+                    let data = JSON.parse(text);
+                    console.log("Received message:", data);
 
+                    if (data.command === "play") {
+                        playVideo(data.video);
+                    }
+                } else {
+                    let data = JSON.parse(event.data);
+                    console.log("Received message:", data);
+
+                    if (data.command === "play") {
+                        playVideo(data.video);
+                    }
+                }
+            } catch (error) {
+                console.error("Error processing WebSocket message:", error);
+            }
+        };
+
+        function playVideo(videoUrl) {
             videoSource.src = videoUrl;
             videoPlayer.load();
-            videoPlayer.play();
-
-            document.getElementById("landingContent")?.style.display = "none";
             videoContainer.style.display = "block";
-
-            // Return to landing page when video ends
-            videoPlayer.onended = function () {
-                stopVideo();
-            };
-        }
-
-        function stopVideo() {
-            videoPlayer.pause();
-            videoPlayer.currentTime = 0;
-            videoContainer.style.display = "none";
-            document.getElementById("landingContent")?.style.display = "block";
+            videoPlayer.play();
         }
     </script>
 </body>
