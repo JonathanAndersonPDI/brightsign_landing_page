@@ -98,19 +98,33 @@
             videoSource.src = `http://localhost:3000/videos/${video}.mp4`;
             videoPlayer.load();
             videoContainer.style.display = "block";
-            
-            let playPromise = videoPlayer.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(() => showInteractionPrompt());
-            }
-        }
 
+            //Set autoplay attributes
+            videoPlayer.muted = true;  // Required for autoplay to work on most browsers
+            videoPalyer.setAttribute("playsinline", "");  // Helps with autoplay on mobile devices
+            videoPlayer.removeAttribute("controls");  //  Hide controls when playing
+
+            // Try playing the video
+            let playPromise = videoPlayer.play();
+            
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        console.log("✅ Autoplay started successfully.");
+                    })
+                    .catch((error) => {
+                        console.warn("⚠️ Autoplay blocked. Showing interaction prompt.");
+                        showInteractionPrompt();
+                    });
+            }
+        }    
         function showInteractionPrompt() {
             interactionPrompt.style.display = "block";
         }
 
         function resumePlayback() {
             interactionPrompt.style.display = "none";
+            videoPlayer.muted = false; // Unmute when user interacts
             videoPlayer.play();
         }
     </script>
