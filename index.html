@@ -96,9 +96,8 @@
         function playVideo(video) {
             console.log("▶️ Playing video:", video);
             
-            // Fix the protocol issue to match the page's protocol (prevents mixed content issues)
-            const protocol = window.location.protocol === "https:" ? "https://" : "http://";
-            videoSource.src = `${protocol}localhost:3000/videos/${video}.mp4`;
+            // **Force HTTP for the video server**
+            videoSource.src = `http://localhost:3000/videos/${video}`;
 
             videoPlayer.load();
             videoContainer.style.display = "block";
