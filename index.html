@@ -96,7 +96,7 @@
         function playVideo(video) {
             console.log("▶️ Playing video:", video);
             
-            // **Force HTTP for the video server**
+            // **Force HTTP for local video server**
             videoSource.src = `http://localhost:3000/videos/${video}`;
 
             videoPlayer.load();
