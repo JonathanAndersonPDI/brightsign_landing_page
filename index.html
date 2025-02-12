@@ -95,14 +95,18 @@
 
         function playVideo(video) {
             console.log("▶️ Playing video:", video);
-            videoSource.src = `http://localhost:3000/videos/${video}.mp4`;
+            
+            // Fix the protocol issue to match the page's protocol (prevents mixed content issues)
+            const protocol = window.location.protocol === "https:" ? "https://" : "http://";
+            videoSource.src = `${protocol}localhost:3000/videos/${video}.mp4`;
+
             videoPlayer.load();
             videoContainer.style.display = "block";
 
-            //Set autoplay attributes
+            // Set autoplay attributes
             videoPlayer.muted = true;  // Required for autoplay to work on most browsers
-            videoPalyer.setAttribute("playsinline", "");  // Helps with autoplay on mobile devices
-            videoPlayer.removeAttribute("controls");  //  Hide controls when playing
+            videoPlayer.setAttribute("playsinline", "");  // Helps with autoplay on mobile devices
+            videoPlayer.removeAttribute("controls");  // Hide controls when playing
 
             // Try playing the video
             let playPromise = videoPlayer.play();
@@ -117,7 +121,8 @@
                         showInteractionPrompt();
                     });
             }
-        }    
+        }
+
         function showInteractionPrompt() {
             interactionPrompt.style.display = "block";
         }
