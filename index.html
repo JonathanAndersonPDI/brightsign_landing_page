@@ -6,20 +6,23 @@
     <title>Power Design</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <script src="https://www.youtube.com/iframe_api"></script> <!-- YouTube API -->
     <style>
         body {
             background-color: black;
             text-align: center;
             color: white;
             font-family: 'Libre Franklin', sans-serif;
+            position: relative;
         }
         #videoContainer {
             display: none;
-            margin-top: 20px;
+            position: relative;
         }
         iframe {
             width: 80%;
             height: 450px;
+            margin-top: 20px;
             border: none;
         }
     </style>
@@ -28,17 +31,25 @@
     <img src="power_design_logo.jpg" alt="Power Design" width="200px">
 
     <div id="videoContainer">
-        <iframe id="videoPlayer" 
-            src="https://www.youtube.com/embed/" 
-            allow="autoplay; encrypted-media" 
-            allowfullscreen>
-        </iframe>
+        <iframe id="youtubePlayer" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
     <script>
+        let player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtubePlayer', {
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            console.log("✅ YouTube Player Ready.");
+        }
+
         const ws = new WebSocket("ws://localhost:8080");
         const videoContainer = document.getElementById("videoContainer");
-        const videoPlayer = document.getElementById("videoPlayer");
 
         ws.onopen = () => {
             console.log("✅ WebSocket connected successfully on Landing Page!");
@@ -50,16 +61,25 @@
                 console.log("📩 Received message:", data);
 
                 if (data.command === "play") {
-                    loadVideo(data.video);
+                    playYouTubeVideo(data.video);
+                } else if (data.command === "pause") {
+                    player.pauseVideo();
+                } else if (data.command === "resume") {
+                    player.playVideo();
+                } else if (data.command === "restart") {
+                    player.seekTo(0);
+                    player.playVideo();
+                } else if (data.command === "stop") {
+                    location.reload();
                 }
             } catch (error) {
                 console.error("❌ Error processing WebSocket message:", error);
             }
         };
 
-        function loadVideo(videoId) {
-            console.log("▶️ Loading YouTube video:", videoId);
-            videoPlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        function playYouTubeVideo(videoId) {
+            console.log("▶️ Loading YouTube Video:", videoId);
+            document.getElementById("youtubePlayer").src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
             videoContainer.style.display = "block";
         }
     </script>
