@@ -27,6 +27,10 @@
         }
         #controls {
             margin-top: 20px;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
         }
         button {
             margin: 10px;
@@ -41,11 +45,21 @@
         button:hover {
             background-color: darkred;
         }
+        #qrCode {
+            margin-top: 20px;
+            width: 150px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
     </style>
 </head>
 <body>
     <img src="power_design_logo.jpg" alt="Power Design" width="200px">
     
+    <!-- QR Code -->
+    <img id="qrCode" src="LandingPageQR.png" alt="Scan QR Code to Access Controller">
+
     <div id="videoContainer">
         <div id="youtubePlayer"></div>
     </div>
@@ -64,7 +78,7 @@
     <script>
         let player;
         let isPlayerReady = false;
-        let currentVideoId = null; 
+        let currentVideoId = null;
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtubePlayer', {
