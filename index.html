@@ -25,39 +25,48 @@
             margin-top: 20px;
             border: none;
         }
-        #interactionPrompt {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
+        #controls {
+            margin-top: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            background-color: red;
             color: white;
-            padding: 20px;
-            border-radius: 10px;
-            font-size: 18px;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
+        }
+        button:hover {
+            background-color: darkred;
         }
     </style>
 </head>
 <body>
     <img src="power_design_logo.jpg" alt="Power Design" width="200px">
-
-    <div id="interactionPrompt" onclick="simulateUserClick()">
-        Tap anywhere to resume video playback.
-    </div>
-
+    
     <div id="videoContainer">
         <div id="youtubePlayer"></div>
+    </div>
+    
+    <div id="controls">
+        <button onclick="sendCommand('CpfgfQ4mBdQ')">Play Video 1</button>
+        <button onclick="sendCommand('SzX00mfwDaU')">Play Video 2</button>
+        <button onclick="sendCommand('LnjRftQP6BQ')">Play Video 3</button>
+        <br>
+        <button onclick="sendControl('pause')">Pause</button>
+        <button onclick="sendControl('resume')">Play</button>
+        <button onclick="sendControl('restart')">Restart</button>
+        <button onclick="sendControl('stop')">Stop</button>
     </div>
 
     <script>
         let player;
         let isPlayerReady = false;
-        let queuedCommand = null; // Store any commands before the player is ready
+        let currentVideoId = null; 
 
         function onYouTubeIframeAPIReady() {
-            console.log("⏳ YouTube IFrame API Loaded. Creating player...");
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
@@ -72,12 +81,6 @@
         function onPlayerReady(event) {
             console.log("✅ YouTube Player Ready.");
             isPlayerReady = true;
-
-            // Execute any pending command (if one was received before player was ready)
-            if (queuedCommand) {
-                executeCommand(queuedCommand);
-                queuedCommand = null;
-            }
         }
 
         function onPlayerStateChange(event) {
@@ -86,72 +89,32 @@
             }
         }
 
-        const ws = new WebSocket("ws://localhost:8080");
-        const videoContainer = document.getElementById("videoContainer");
-        const interactionPrompt = document.getElementById("interactionPrompt");
-
-        ws.onopen = () => {
-            console.log("✅ WebSocket connected successfully on Landing Page!");
-        };
-
-        ws.onmessage = async (event) => {
-            try {
-                let data;
-
-                // **Handle Blob WebSocket Messages**
-                if (event.data instanceof Blob) {
-                    let text = await event.data.text(); // Convert Blob to text
-                    data = JSON.parse(text); // Parse JSON
-                } else {
-                    data = JSON.parse(event.data);
-                }
-
-                console.log("📩 Received message:", data);
-
-                // Store command if player isn't ready
-                if (!isPlayerReady) {
-                    console.warn("⚠️ Player not ready, storing command:", data);
-                    queuedCommand = data;
-                    return;
-                }
-
-                executeCommand(data);
-            } catch (error) {
-                console.error("❌ Error processing WebSocket message:", error);
+        function sendCommand(videoId) {
+            if (isPlayerReady) {
+                console.log("▶️ Loading YouTube Video:", videoId);
+                player.loadVideoById(videoId);
+                player.playVideo();
+                player.unMute();
+            } else {
+                console.warn("⚠️ Player not ready, retrying...");
+                setTimeout(() => sendCommand(videoId), 1000);
             }
-        };
+            document.getElementById("videoContainer").style.display = "block";
+        }
 
-        function executeCommand(data) {
-            if (data.command === "play") {
-                playYouTubeVideo(data.video);
-            } else if (data.command === "pause") {
+        function sendControl(action) {
+            if (!isPlayerReady) return;
+
+            if (action === 'pause') {
                 player.pauseVideo();
-            } else if (data.command === "resume") {
-                simulateUserClick();
-            } else if (data.command === "restart") {
+            } else if (action === 'resume') {
+                player.playVideo();
+            } else if (action === 'restart') {
                 player.seekTo(0);
-                simulateUserClick();
-            } else if (data.command === "stop") {
+                player.playVideo();
+            } else if (action === 'stop') {
                 location.reload();
             }
-        }
-
-        function playYouTubeVideo(videoId) {
-            console.log("▶️ Loading YouTube Video:", videoId);
-
-            player.loadVideoById(videoId);
-            videoContainer.style.display = "block";
-
-            setTimeout(() => {
-                player.unMute();
-                player.playVideo();
-            }, 500);
-        }
-
-        function simulateUserClick() {
-            console.log("🎭 Simulating user click to resume video...");
-            player.unMute();
-            player.playVideo();
         }
     </script>
 </body>
