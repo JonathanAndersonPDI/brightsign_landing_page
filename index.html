@@ -54,12 +54,13 @@
     <script>
         let player;
         let isPlayerReady = false;
+        let currentVideoId = null; // Track the current video playing
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
-                playerVars: { 'autoplay': 1, 'controls': 1, 'mute' : 1 },
+                playerVars: { 'autoplay': 1, 'controls': 1, 'mute': 1 },
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
@@ -105,12 +106,10 @@
                 } else if (data.command === "pause") {
                     player.pauseVideo();
                 } else if (data.command === "resume") {
-                    player.playVideo();
-                    player.unMute();
+                    resumePlayback();
                 } else if (data.command === "restart") {
                     player.seekTo(0);
-                    player.playVideo();
-                    player.unMute();
+                    resumePlayback();
                 } else if (data.command === "stop") {
                     location.reload();
                 }
@@ -121,22 +120,26 @@
 
         function playYouTubeVideo(videoId) {
             console.log("▶️ Loading YouTube Video:", videoId);
+            currentVideoId = videoId; // Store current video
+
             if (isPlayerReady) {
                 player.loadVideoById(videoId);
-                player.playVideo();
-                player.unMute();
-                player.playVideo();
             } else {
                 console.warn("⚠️ Player not ready, retrying...");
                 setTimeout(() => playYouTubeVideo(videoId), 1000);
             }
+
             videoContainer.style.display = "block";
         }
 
         function resumePlayback() {
-            interactionPrompt.style.display = "none";
-            player.unMute();
-            player.playVideo();
+            if (currentVideoId) {
+                console.log("▶️ Resuming Video:", currentVideoId);
+                player.playVideo();
+                player.unMute();
+            } else {
+                console.warn("⚠️ No video selected to resume.");
+            }
         }
     </script>
 </body>
