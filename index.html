@@ -3,142 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Design</title>
+    <title>Video Selector</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <script src="https://www.youtube.com/iframe_api"></script> <!-- YouTube API -->
     <style>
         body {
             background-color: black;
+            color: white;
             text-align: center;
-            color: white;
             font-family: 'Libre Franklin', sans-serif;
-            position: relative;
         }
-        #videoContainer {
-            display: none;
-            position: relative;
-        }
-        iframe {
-            width: 80%;
-            height: 450px;
-            margin-top: 20px;
-            border: none;
-        }
-        #interactionPrompt {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 15px;
+            font-size: 20px;
+            background-color: red;
             color: white;
-            padding: 20px;
-            border-radius: 10px;
-            font-size: 18px;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
+        }
+        button:hover {
+            background-color: darkred;
         }
     </style>
 </head>
 <body>
-    <img src="power_design_logo.jpg" alt="Power Design" width="200px">
+    <h1>Select a Video to Play</h1>
 
-    <div id="interactionPrompt" onclick="resumePlayback()">
-        Tap anywhere to resume video playback.
-    </div>
+    <button onclick="sendCommand('CpfgfQ4mBdQ')">Play Video 1</button>
+    <button onclick="sendCommand('SzX00mfwDaU')">Play Video 2</button>
+    <button onclick="sendCommand('LnjRftQP6BQ')">Play Video 3</button>
 
-    <div id="videoContainer">
-        <div id="youtubePlayer"></div>
-    </div>
+    <h2>Playback Controls</h2>
+    <button onclick="sendControl('pause')">Pause</button>
+    <button onclick="sendControl('resume')">Play</button> <!-- Now plays the current video -->
+    <button onclick="sendControl('restart')">Restart</button>
+    <button onclick="sendControl('stop')">Return to Landing Page</button>
 
     <script>
-        let player;
-        let isPlayerReady = false;
-        let currentVideoId = null; // Track the current video playing
-
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('youtubePlayer', {
-                height: '450',
-                width: '80%',
-                playerVars: { 'autoplay': 1, 'controls': 1, 'mute': 1 },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-        }
-
-        function onPlayerReady(event) {
-            console.log("✅ YouTube Player Ready.");
-            isPlayerReady = true;
-        }
-
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING) {
-                document.getElementById("interactionPrompt").style.display = "none";
-            }
-        }
-
         const ws = new WebSocket("ws://localhost:8080");
-        const videoContainer = document.getElementById("videoContainer");
-        const interactionPrompt = document.getElementById("interactionPrompt");
 
         ws.onopen = () => {
-            console.log("✅ WebSocket connected successfully on Landing Page!");
+            console.log("✅ WebSocket connected successfully on Video Selector Page!");
         };
 
-        ws.onmessage = async (event) => {
-            try {
-                let data;
-
-                // **Handle Blob WebSocket Messages**
-                if (event.data instanceof Blob) {
-                    let text = await event.data.text(); // Convert Blob to text
-                    data = JSON.parse(text); // Parse JSON
-                } else {
-                    data = JSON.parse(event.data);
-                }
-
-                console.log("📩 Received message:", data);
-
-                if (data.command === "play") {
-                    playYouTubeVideo(data.video);
-                } else if (data.command === "pause") {
-                    player.pauseVideo();
-                } else if (data.command === "resume") {
-                    resumePlayback();
-                } else if (data.command === "restart") {
-                    player.seekTo(0);
-                    resumePlayback();
-                } else if (data.command === "stop") {
-                    location.reload();
-                }
-            } catch (error) {
-                console.error("❌ Error processing WebSocket message:", error);
-            }
-        };
-
-        function playYouTubeVideo(videoId) {
-            console.log("▶️ Loading YouTube Video:", videoId);
-            currentVideoId = videoId; // Store current video
-
-            if (isPlayerReady) {
-                player.loadVideoById(videoId);
+        function sendCommand(videoId) {
+            if (ws.readyState === WebSocket.OPEN) {
+                let message = JSON.stringify({ command: "play", video: videoId });
+                ws.send(message);
+                console.log("📤 Sent command to play video:", message);
             } else {
-                console.warn("⚠️ Player not ready, retrying...");
-                setTimeout(() => playYouTubeVideo(videoId), 1000);
+                console.warn("⚠️ WebSocket is not open. Cannot send command.");
             }
-
-            videoContainer.style.display = "block";
         }
 
-        function resumePlayback() {
-            if (currentVideoId) {
-                console.log("▶️ Resuming Video:", currentVideoId);
-                player.playVideo();
-                player.unMute();
+        function sendControl(action) {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ command: action }));
+                console.log("📤 Sent control command:", action);
             } else {
-                console.warn("⚠️ No video selected to resume.");
+                console.warn("⚠️ WebSocket is not open. Cannot send command.");
             }
         }
     </script>
