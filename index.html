@@ -85,7 +85,7 @@
     <script>
         let player;
         let isPlayerReady = false;
-        let currentVideoId = null;
+        let ws = new WebSocket("wss://your-websocket-server-url"); // Change this to your actual WebSocket server
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtubePlayer', {
@@ -110,7 +110,41 @@
             }
         }
 
+        ws.onopen = () => {
+            console.log("✅ WebSocket Connected!");
+        };
+
+        ws.onmessage = (event) => {
+            let data = JSON.parse(event.data);
+            console.log("📩 Received WebSocket Message:", data);
+
+            if (data.command === "play") {
+                playYouTubeVideo(data.video);
+            } else if (data.command === "pause") {
+                player.pauseVideo();
+            } else if (data.command === "resume") {
+                player.playVideo();
+            } else if (data.command === "restart") {
+                player.seekTo(0);
+                player.playVideo();
+            } else if (data.command === "stop") {
+                location.reload();
+            }
+        };
+
         function sendCommand(videoId) {
+            let message = JSON.stringify({ command: "play", video: videoId });
+            ws.send(message);
+            console.log("📤 Sent WebSocket Command:", message);
+        }
+
+        function sendControl(action) {
+            let message = JSON.stringify({ command: action });
+            ws.send(message);
+            console.log("📤 Sent WebSocket Control:", message);
+        }
+
+        function playYouTubeVideo(videoId) {
             if (isPlayerReady) {
                 console.log("▶️ Loading YouTube Video:", videoId);
                 player.loadVideoById(videoId);
@@ -118,24 +152,9 @@
                 player.unMute();
             } else {
                 console.warn("⚠️ Player not ready, retrying...");
-                setTimeout(() => sendCommand(videoId), 1000);
+                setTimeout(() => playYouTubeVideo(videoId), 1000);
             }
             document.getElementById("videoContainer").style.display = "block";
-        }
-
-        function sendControl(action) {
-            if (!isPlayerReady) return;
-
-            if (action === 'pause') {
-                player.pauseVideo();
-            } else if (action === 'resume') {
-                player.playVideo();
-            } else if (action === 'restart') {
-                player.seekTo(0);
-                player.playVideo();
-            } else if (action === 'stop') {
-                location.reload();
-            }
         }
     </script>
 </body>
