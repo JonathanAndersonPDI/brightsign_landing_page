@@ -105,10 +105,12 @@
                 } else if (data.command === "pause") {
                     player.pauseVideo();
                 } else if (data.command === "resume") {
-                    attemptAutoplay();
+                    player.playVideo();
+                    player.unMute();
                 } else if (data.command === "restart") {
                     player.seekTo(0);
-                    attemptAutoplay();
+                    player.playVideo();
+                    player.unMute();
                 } else if (data.command === "stop") {
                     location.reload();
                 }
@@ -121,27 +123,13 @@
             console.log("▶️ Loading YouTube Video:", videoId);
             if (isPlayerReady) {
                 player.loadVideoById(videoId);
-                attemptAutoplay();
+                player.playVideo();
+                player.unMute();
             } else {
                 console.warn("⚠️ Player not ready, retrying...");
                 setTimeout(() => playYouTubeVideo(videoId), 1000);
             }
             videoContainer.style.display = "block";
-        }
-
-        function attemptAutoplay() {
-            let playPromise = player.playVideo();
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => {
-                        console.log("✅ Video playing.");
-                        player.unMute();
-                    })
-                    .catch(() => {
-                        console.warn("⚠️ Autoplay blocked. Showing interaction prompt.");
-                        interactionPrompt.style.display = "block";
-                    });
-            }
         }
 
         function resumePlayback() {
