@@ -48,30 +48,20 @@
     </div>
 
     <div id="videoContainer">
-        <iframe 
-            id="youtubePlayer"
-            allow="autoplay; encrypted-media; fullscreen"
-            allowfullscreen
-            frameborder="0">
-        </iframe>
+        <div id="youtubePlayer"></div>
     </div>
-
-    <!-- Hidden Silent Audio Trick -->
-    <audio id="silentAudio" style="display:none;" autoplay>
-        <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=" type="audio/wav">
-    </audio>
 
     <script>
         let player;
         let isPlayerReady = false;
-        let pendingVideoId = null; // Store video ID if player isn't ready yet
-        const silentAudio = document.getElementById("silentAudio");
+        let queuedCommand = null; // Store any commands before the player is ready
 
         function onYouTubeIframeAPIReady() {
+            console.log("⏳ YouTube IFrame API Loaded. Creating player...");
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
-                playerVars: { 'autoplay': 1, 'controls': 1, 'mute': 1 },
+                playerVars: { 'autoplay': 0, 'controls': 1, 'mute': 1 },
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
@@ -83,15 +73,10 @@
             console.log("✅ YouTube Player Ready.");
             isPlayerReady = true;
 
-            // Play silent audio to trick browser autoplay restrictions
-            silentAudio.play().catch(error => {
-                console.warn("⚠️ Silent audio failed to play:", error);
-            });
-
-            // If a video was queued before the player was ready, play it now
-            if (pendingVideoId) {
-                playYouTubeVideo(pendingVideoId);
-                pendingVideoId = null;
+            // Execute any pending command (if one was received before player was ready)
+            if (queuedCommand) {
+                executeCommand(queuedCommand);
+                queuedCommand = null;
             }
         }
 
@@ -123,37 +108,40 @@
 
                 console.log("📩 Received message:", data);
 
-                if (data.command === "play") {
-                    playYouTubeVideo(data.video);
-                } else if (data.command === "pause") {
-                    player.pauseVideo();
-                } else if (data.command === "resume") {
-                    simulateUserClick();
-                } else if (data.command === "restart") {
-                    player.seekTo(0);
-                    simulateUserClick();
-                } else if (data.command === "stop") {
-                    location.reload();
+                // Store command if player isn't ready
+                if (!isPlayerReady) {
+                    console.warn("⚠️ Player not ready, storing command:", data);
+                    queuedCommand = data;
+                    return;
                 }
+
+                executeCommand(data);
             } catch (error) {
                 console.error("❌ Error processing WebSocket message:", error);
             }
         };
 
+        function executeCommand(data) {
+            if (data.command === "play") {
+                playYouTubeVideo(data.video);
+            } else if (data.command === "pause") {
+                player.pauseVideo();
+            } else if (data.command === "resume") {
+                simulateUserClick();
+            } else if (data.command === "restart") {
+                player.seekTo(0);
+                simulateUserClick();
+            } else if (data.command === "stop") {
+                location.reload();
+            }
+        }
+
         function playYouTubeVideo(videoId) {
             console.log("▶️ Loading YouTube Video:", videoId);
-
-            // Store video ID if player isn't ready
-            if (!isPlayerReady) {
-                console.warn("⚠️ Player not ready, queuing video:", videoId);
-                pendingVideoId = videoId;
-                return;
-            }
 
             player.loadVideoById(videoId);
             videoContainer.style.display = "block";
 
-            // Force unmute and play after a delay
             setTimeout(() => {
                 player.unMute();
                 player.playVideo();
@@ -162,20 +150,6 @@
 
         function simulateUserClick() {
             console.log("🎭 Simulating user click to resume video...");
-
-            // Try to trigger silent audio
-            silentAudio.play().catch(error => {
-                console.warn("⚠️ Silent audio play failed:", error);
-            });
-
-            // Dispatch a click event to trick browser
-            const clickEvent = new MouseEvent("click", {
-                bubbles: true,
-                cancelable: true,
-                view: window
-            });
-
-            document.body.dispatchEvent(clickEvent);
             player.unMute();
             player.playVideo();
         }
