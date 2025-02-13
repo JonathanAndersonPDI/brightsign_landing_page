@@ -43,24 +43,35 @@
 <body>
     <img src="power_design_logo.jpg" alt="Power Design" width="200px">
 
-    <div id="interactionPrompt" onclick="resumePlayback()">
+    <div id="interactionPrompt" onclick="simulateUserClick()">
         Tap anywhere to resume video playback.
     </div>
 
     <div id="videoContainer">
-        <div id="youtubePlayer"></div>
+        <iframe 
+            id="youtubePlayer"
+            allow="autoplay; encrypted-media; fullscreen"
+            allowfullscreen
+            frameborder="0">
+        </iframe>
     </div>
+
+    <!-- Hidden Silent Audio Trick -->
+    <audio id="silentAudio" style="display:none;" autoplay>
+        <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=" type="audio/wav">
+    </audio>
 
     <script>
         let player;
         let isPlayerReady = false;
         let pendingVideoId = null; // Store video ID if player isn't ready yet
+        const silentAudio = document.getElementById("silentAudio");
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
-                playerVars: { 'autoplay': 0, 'controls': 1, 'mute': 1 },
+                playerVars: { 'autoplay': 1, 'controls': 1, 'mute': 1 },
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
@@ -71,6 +82,11 @@
         function onPlayerReady(event) {
             console.log("✅ YouTube Player Ready.");
             isPlayerReady = true;
+
+            // Play silent audio to trick browser autoplay restrictions
+            silentAudio.play().catch(error => {
+                console.warn("⚠️ Silent audio failed to play:", error);
+            });
 
             // If a video was queued before the player was ready, play it now
             if (pendingVideoId) {
@@ -112,10 +128,10 @@
                 } else if (data.command === "pause") {
                     player.pauseVideo();
                 } else if (data.command === "resume") {
-                    resumePlayback();
+                    simulateUserClick();
                 } else if (data.command === "restart") {
                     player.seekTo(0);
-                    resumePlayback();
+                    simulateUserClick();
                 } else if (data.command === "stop") {
                     location.reload();
                 }
@@ -137,15 +153,29 @@
             player.loadVideoById(videoId);
             videoContainer.style.display = "block";
 
-            // Force unmute and play
+            // Force unmute and play after a delay
             setTimeout(() => {
                 player.unMute();
                 player.playVideo();
             }, 500);
         }
 
-        function resumePlayback() {
-            console.log("🎭 Resuming video...");
+        function simulateUserClick() {
+            console.log("🎭 Simulating user click to resume video...");
+
+            // Try to trigger silent audio
+            silentAudio.play().catch(error => {
+                console.warn("⚠️ Silent audio play failed:", error);
+            });
+
+            // Dispatch a click event to trick browser
+            const clickEvent = new MouseEvent("click", {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            });
+
+            document.body.dispatchEvent(clickEvent);
             player.unMute();
             player.playVideo();
         }
