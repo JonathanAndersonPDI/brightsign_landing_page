@@ -125,6 +125,7 @@
                 player.loadVideoById(videoId);
                 player.playVideo();
                 player.unMute();
+                player.playVideo();
             } else {
                 console.warn("⚠️ Player not ready, retrying...");
                 setTimeout(() => playYouTubeVideo(videoId), 1000);
