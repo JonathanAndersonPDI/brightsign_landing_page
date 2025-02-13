@@ -43,23 +43,18 @@
 <body>
     <img src="power_design_logo.jpg" alt="Power Design" width="200px">
 
-    <div id="interactionPrompt" onclick="simulateUserClick()">
+    <div id="interactionPrompt" onclick="resumePlayback()">
         Tap anywhere to resume video playback.
     </div>
 
     <div id="videoContainer">
-        <iframe 
-            id="youtubePlayer"
-            frameborder="0"
-            allow="autoplay; encrypted-media; fullscreen"
-            allowfullscreen>
-        </iframe>
+        <div id="youtubePlayer"></div>
     </div>
 
     <script>
         let player;
         let isPlayerReady = false;
-        let currentVideoId = null; // Track the current video playing
+        let pendingVideoId = null; // Store video ID if player isn't ready yet
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtubePlayer', {
@@ -76,6 +71,12 @@
         function onPlayerReady(event) {
             console.log("✅ YouTube Player Ready.");
             isPlayerReady = true;
+
+            // If a video was queued before the player was ready, play it now
+            if (pendingVideoId) {
+                playYouTubeVideo(pendingVideoId);
+                pendingVideoId = null;
+            }
         }
 
         function onPlayerStateChange(event) {
@@ -111,10 +112,10 @@
                 } else if (data.command === "pause") {
                     player.pauseVideo();
                 } else if (data.command === "resume") {
-                    simulateUserClick();
+                    resumePlayback();
                 } else if (data.command === "restart") {
                     player.seekTo(0);
-                    simulateUserClick();
+                    resumePlayback();
                 } else if (data.command === "stop") {
                     location.reload();
                 }
@@ -125,27 +126,26 @@
 
         function playYouTubeVideo(videoId) {
             console.log("▶️ Loading YouTube Video:", videoId);
-            currentVideoId = videoId; // Store current video
 
-            if (isPlayerReady) {
-                player.loadVideoById(videoId);
-            } else {
-                console.warn("⚠️ Player not ready, retrying...");
-                setTimeout(() => playYouTubeVideo(videoId), 1000);
+            // Store video ID if player isn't ready
+            if (!isPlayerReady) {
+                console.warn("⚠️ Player not ready, queuing video:", videoId);
+                pendingVideoId = videoId;
+                return;
             }
 
+            player.loadVideoById(videoId);
             videoContainer.style.display = "block";
+
+            // Force unmute and play
+            setTimeout(() => {
+                player.unMute();
+                player.playVideo();
+            }, 500);
         }
 
-        function simulateUserClick() {
-            console.log("🎭 Simulating user click to resume video...");
-            const clickEvent = new MouseEvent("click", {
-                bubbles: true,
-                cancelable: true,
-                view: window
-            });
-
-            document.body.dispatchEvent(clickEvent);
+        function resumePlayback() {
+            console.log("🎭 Resuming video...");
             player.unMute();
             player.playVideo();
         }
