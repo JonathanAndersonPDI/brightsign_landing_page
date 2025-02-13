@@ -57,7 +57,16 @@
 
         ws.onmessage = async (event) => {
             try {
-                let data = JSON.parse(event.data);
+                let data;
+
+                // **Handle Blob WebSocket Messages**
+                if (event.data instanceof Blob) {
+                    let text = await event.data.text(); // Convert Blob to text
+                    data = JSON.parse(text); // Parse JSON
+                } else {
+                    data = JSON.parse(event.data);
+                }
+
                 console.log("📩 Received message:", data);
 
                 if (data.command === "play") {
