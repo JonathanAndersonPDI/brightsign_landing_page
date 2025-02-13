@@ -14,26 +14,28 @@
             color: white;
             font-family: 'Libre Franklin', sans-serif;
             position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
         }
         #videoContainer {
             display: none;
-            position: relative;
         }
         iframe {
             width: 80%;
             height: 450px;
-            margin-top: 20px;
             border: none;
         }
         #controls {
-            margin-top: 20px;
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding-bottom: 20px;
         }
         button {
-            margin: 10px;
             padding: 10px;
             font-size: 16px;
             background-color: red;
@@ -45,25 +47,24 @@
         button:hover {
             background-color: darkred;
         }
+        #qrContainer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            text-align: center;
+        }
         #qrCode {
-            margin-top: 20px;
             width: 150px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
         }
     </style>
 </head>
 <body>
     <img src="power_design_logo.jpg" alt="Power Design" width="200px">
-    
-    <!-- QR Code -->
-    <img id="qrCode" src="LandingPageQR.png" alt="Scan QR Code to Access Controller">
 
     <div id="videoContainer">
         <div id="youtubePlayer"></div>
     </div>
-    
+
     <div id="controls">
         <button onclick="sendCommand('CpfgfQ4mBdQ')">Play Video 1</button>
         <button onclick="sendCommand('SzX00mfwDaU')">Play Video 2</button>
@@ -73,6 +74,12 @@
         <button onclick="sendControl('resume')">Play</button>
         <button onclick="sendControl('restart')">Restart</button>
         <button onclick="sendControl('stop')">Stop</button>
+    </div>
+
+    <!-- QR Code Positioned Bottom Right -->
+    <div id="qrContainer">
+        <img id="qrCode" src="LandingPageQR.png" alt="Scan QR Code to Access Controller">
+        <p>Scan Me</p>
     </div>
 
     <script>
