@@ -12,51 +12,33 @@
             text-align: center;
             color: white;
             font-family: 'Libre Franklin', sans-serif;
-            position: relative;
         }
         #videoContainer {
             display: none;
-            position: relative;
-        }
-        video {
-            width: 80%;
             margin-top: 20px;
         }
-        #interactionPrompt {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
+        iframe {
+            width: 80%;
+            height: 450px;
+            border: none;
         }
     </style>
 </head>
 <body>
     <img src="power_design_logo.jpg" alt="Power Design" width="200px">
 
-    <div id="interactionPrompt" onclick="resumePlayback()">
-        Tap anywhere to resume video playback.
-    </div>
-
     <div id="videoContainer">
-        <video id="videoPlayer" controls>
-            <source id="videoSource" src="" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
+        <iframe id="videoPlayer" 
+            src="https://www.youtube.com/embed/" 
+            allow="autoplay; encrypted-media" 
+            allowfullscreen>
+        </iframe>
     </div>
 
     <script>
         const ws = new WebSocket("ws://localhost:8080");
         const videoContainer = document.getElementById("videoContainer");
         const videoPlayer = document.getElementById("videoPlayer");
-        const videoSource = document.getElementById("videoSource");
-        const interactionPrompt = document.getElementById("interactionPrompt");
 
         ws.onopen = () => {
             console.log("✅ WebSocket connected successfully on Landing Page!");
@@ -64,68 +46,21 @@
 
         ws.onmessage = async (event) => {
             try {
-                let data;
-
-                if (event.data instanceof Blob) {
-                    let text = await event.data.text();
-                    data = JSON.parse(text);
-                } else {
-                    data = JSON.parse(event.data);
-                }
-
+                let data = JSON.parse(event.data);
                 console.log("📩 Received message:", data);
 
                 if (data.command === "play") {
-                    playVideo(data.video);
-                } else if (data.command === "pause") {
-                    videoPlayer.pause();
-                } else if (data.command === "resume") {
-                    attemptAutoplay();
-                } else if (data.command === "restart") {
-                    videoPlayer.currentTime = 0;
-                    attemptAutoplay();
-                } else if (data.command === "stop") {
-                    location.reload();
+                    loadVideo(data.video);
                 }
             } catch (error) {
                 console.error("❌ Error processing WebSocket message:", error);
             }
         };
 
-        function playVideo(video) {
-            console.log(`▶️ Playing video: ${video}`);
-
-            // Ensure correct protocol (Fix Mixed Content issue)
-            const protocol = window.location.protocol === "https:" ? "https://" : "http://";
-            videoSource.src = `${protocol}localhost:3000/videos/${video}`;
-            videoPlayer.load();
+        function loadVideo(videoId) {
+            console.log("▶️ Loading YouTube video:", videoId);
+            videoPlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
             videoContainer.style.display = "block";
-
-            attemptAutoplay();
-        }
-
-        function attemptAutoplay() {
-            videoPlayer.muted = true; // Mute required for autoplay
-            let playPromise = videoPlayer.play();
-
-            if (playPromise !== undefined) {
-                playPromise
-                    .then(() => console.log("✅ Video autoplay started successfully."))
-                    .catch(() => {
-                        console.warn("⚠️ Autoplay blocked. Showing interaction prompt.");
-                        showInteractionPrompt();
-                    });
-            }
-        }
-
-        function showInteractionPrompt() {
-            interactionPrompt.style.display = "block";
-        }
-
-        function resumePlayback() {
-            interactionPrompt.style.display = "none";
-            videoPlayer.muted = false; // Unmute on user interaction
-            videoPlayer.play();
         }
     </script>
 </body>
