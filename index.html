@@ -4,7 +4,190 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Power Design</title>
+    <link rel="icon" type="image/png"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Design</title>
     <link rel="icon" type="image/png" sizes="32x32" href="https://jonathanandersonpdi.github.io/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://jonathanandersonpdi.github.io/favicon-16x16.png">
+    <script src="https://www.youtube.com/iframe_api"></script> <!-- YouTube API -->
+    <style>
+        body {
+            background-color: black;
+            text-align: center;
+            color: white;
+            font-family: 'Libre Franklin', sans-serif;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #videoContainer {
+            display: none;
+        }
+        iframe {
+            width: 80%;
+            height: 450px;
+            border: none;
+        }
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            padding-bottom: 20px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: darkred;
+        }
+        #qrContainer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            text-align: center;
+        }
+        #qrCode {
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <img src="power_design_logo.jpg" alt="Power Design" width="200px">
+
+    <div id="videoContainer">
+        <div id="youtubePlayer"></div>
+    </div>
+
+    <div id="controls">
+        <button onclick="sendCommand('CpfgfQ4mBdQ')">Play Video 1</button>
+        <button onclick="sendCommand('SzX00mfwDaU')">Play Video 2</button>
+        <button onclick="sendCommand('LnjRftQP6BQ')">Play Video 3</button>
+        <br>
+        <button onclick="sendControl('pause')">Pause</button>
+        <button onclick="sendControl('resume')">Play</button>
+        <button onclick="sendControl('restart')">Restart</button>
+        <button onclick="sendControl('stop')">Stop</button>
+    </div>
+
+    <!-- QR Code Positioned Bottom Right -->
+    <div id="qrContainer">
+        <img id="qrCode" src="LandingPageQR.png" alt="Scan QR Code to Access Controller">
+        <p>Scan Me</p>
+    </div>
+
+    <script>
+        let player;
+        let isPlayerReady = false;
+        let ws;
+
+        function connectWebSocket() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                ws = new WebSocket("wss://70.127.105.206:8080/");
+
+                ws.onopen = () => console.log("✅ WebSocket Connected!");
+                
+                ws.onerror = (error) => {
+                    console.log("❌ WebSocket Error:", error);
+                    setTimeout(connectWebSocket, 5000); // Retry after 5 seconds
+                };
+
+                ws.onmessage = (event) => {
+                    let data = JSON.parse(event.data);
+                    console.log("📩 Received WebSocket Message:", data);
+
+                    if (data.command === "play") {
+                        playYouTubeVideo(data.video);
+                    } else if (data.command === "pause") {
+                        player.pauseVideo();
+                    } else if (data.command === "resume") {
+                        player.playVideo();
+                    } else if (data.command === "restart") {
+                        player.seekTo(0);
+                        player.playVideo();
+                    } else if (data.command === "stop") {
+                        location.reload();
+                    }
+                };
+            }
+        }
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtubePlayer', {
+                height: '450',
+                width: '80%',
+                playerVars: { 'autoplay': 0, 'controls': 1, 'mute': 1, 'origin': 'https://jonathanandersonpdi.github.io' },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            console.log("✅ YouTube Player Ready.");
+            isPlayerReady = true;
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                document.getElementById("interactionPrompt").style.display = "none";
+            }
+        }
+
+        function sendCommand(videoId) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                let message = JSON.stringify({ command: "play", video: videoId });
+                ws.send(message);
+                console.log("📤 Sent WebSocket Command:", message);
+            } else {
+                console.warn("⚠️ WebSocket Not Connected!");
+                connectWebSocket();
+            }
+        }
+
+        function sendControl(action) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                let message = JSON.stringify({ command: action });
+                ws.send(message);
+                console.log("📤 Sent WebSocket Control:", message);
+            } else {
+                console.warn("⚠️ WebSocket Not Connected!");
+                connectWebSocket();
+            }
+        }
+
+        function playYouTubeVideo(videoId) {
+            if (isPlayerReady) {
+                console.log("▶️ Loading YouTube Video:", videoId);
+                player.loadVideoById(videoId);
+                player.playVideo();
+                player.unMute();
+            } else {
+                console.warn("⚠️ Player not ready, retrying...");
+                setTimeout(() => playYouTubeVideo(videoId), 1000);
+            }
+            document.getElementById("videoContainer").style.display = "block";
+        }
+
+        // Connect WebSocket when page loads
+        window.addEventListener("load", connectWebSocket);
+    </script>
+</body>
+</html>
+ sizes="32x32" href="https://jonathanandersonpdi.github.io/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="https://jonathanandersonpdi.github.io/favicon-16x16.png">
     <script src="https://www.youtube.com/iframe_api"></script> <!-- YouTube API -->
     <style>
