@@ -85,7 +85,7 @@
     <script>
         let player;
         let isPlayerReady = false;
-        let ws = new WebSocket("wss://wss://your-public-ip-or-ip:8080"); // Change this to your actual WebSocket server
+        let ws = new WebSocket("wss://your-public-ip-or-ip:8080"); // Change this to your actual WebSocket server
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtubePlayer', {
