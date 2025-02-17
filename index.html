@@ -41,45 +41,95 @@
         let ws;
 
         function onYouTubeIframeAPIReady() {
+            console.log("📡 YouTube API Loaded, Initializing Player...");
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
                 playerVars: { 'autoplay': 0, 'controls': 1 },
-                events: { 'onReady': () => isPlayerReady = true }
+                events: {
+                    'onReady': onPlayerReady
+                }
             });
+        }
+
+        function onPlayerReady(event) {
+            console.log("✅ YouTube Player is Ready!");
+            isPlayerReady = true;
         }
 
         function connectWebSocket() {
             ws = new WebSocket("ws://localhost:8080");
 
             ws.onopen = () => {
+                console.log("✅ WebSocket connected!");
                 document.getElementById("status").innerText = "✅ WebSocket Connected!";
             };
 
             ws.onclose = () => {
+                console.warn("⚠️ WebSocket Disconnected. Retrying...");
                 document.getElementById("status").innerText = "⚠️ WebSocket Disconnected. Retrying...";
                 setTimeout(connectWebSocket, 5000);
             };
 
+            ws.onerror = (error) => {
+                console.error("❌ WebSocket Error:", error);
+            };
+
             ws.onmessage = (event) => {
-                let data = JSON.parse(event.data);
-                handleCommand(data);
+                try {
+                    let data = JSON.parse(event.data);
+                    console.log("📩 Received WebSocket Message:", data);
+                    handleCommand(data);
+                } catch (error) {
+                    console.error("❌ Error Processing WebSocket Message:", error);
+                }
             };
         }
 
         function handleCommand(data) {
-            if (!isPlayerReady) return;
+            if (!isPlayerReady) {
+                console.warn("⚠️ Player not ready yet. Ignoring command.");
+                return;
+            }
 
-            if (data.command === "play" || data.command === "playControl") {
+            if (data.command === "play") {
                 lastVideoId = data.video;
-                player.loadVideoById(lastVideoId);
-                document.getElementById("videoContainer").style.display = "block";
-                player.playVideo();
+                loadAndPlayVideo(lastVideoId);
+            } else if (data.command === "playControl") {
+                if (lastVideoId) {
+                    playVideo();
+                } else {
+                    console.warn("⚠️ No video selected yet.");
+                    document.getElementById("status").innerText = "⚠️ Select a video first!";
+                }
             } else if (data.command === "pause") {
                 player.pauseVideo();
             } else if (data.command === "resume") {
                 player.playVideo();
+            } else if (data.command === "restart") {
+                player.seekTo(0);
+                player.playVideo();
+            } else if (data.command === "stop") {
+                player.stopVideo();
+            } else if (data.command === "return") {
+                window.location.href = "video-selector.html"; // ✅ Redirect back
             }
+        }
+
+        function loadAndPlayVideo(videoId) {
+            console.log("▶️ Loading Video:", videoId);
+            player.loadVideoById(videoId);
+            document.getElementById("videoContainer").style.display = "block";
+        }
+
+        function playVideo() {
+            if (!isPlayerReady) {
+                console.warn("⚠️ Player not ready, delaying play.");
+                setTimeout(playVideo, 500);
+                return;
+            }
+            console.log("🎬 Playing Video");
+            player.playVideo();
         }
 
         connectWebSocket();
