@@ -6,7 +6,7 @@
     <title>Power Design</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <script src="https://www.youtube.com/iframe_api"></script> <!-- YouTube API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         body {
             background-color: black;
@@ -46,15 +46,10 @@
 </head>
 <body>
     <img src="power_design_logo.jpg" alt="Power Design" width="200px">
-
-    <div id="interactionPrompt" onclick="simulateUserClick()">
-        Tap anywhere to resume video playback.
-    </div>
-
+    <div id="interactionPrompt" onclick="simulateUserClick()">Tap anywhere to resume video playback.</div>
     <div id="videoContainer">
         <div id="youtubePlayer"></div>
     </div>
-
     <div id="status">Connecting to WebSocket...</div>
 
     <script>
@@ -82,21 +77,12 @@
                 console.error("❌ WebSocket Error:", error);
             };
 
-            ws.onmessage = async (event) => {
+            ws.onmessage = (event) => {
                 try {
-                    let data;
-
-                    if (event.data instanceof Blob) {
-                        let text = await event.data.text();
-                        data = JSON.parse(text);
-                    } else {
-                        data = JSON.parse(event.data);
-                    }
-
+                    let data = JSON.parse(event.data);
                     console.log("📩 Received message:", data);
 
                     if (!isPlayerReady) {
-                        console.warn("⚠️ Player not ready, storing command:", data);
                         queuedCommand = data;
                         return;
                     }
@@ -109,34 +95,36 @@
         }
 
         function onYouTubeIframeAPIReady() {
-            console.log("⏳ YouTube IFrame API Loaded. Creating player...");
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
                 playerVars: { 'autoplay': 0, 'controls': 1, 'mute': 1 },
                 events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
+                    'onReady': onPlayerReady
                 }
             });
         }
 
         function onPlayerReady(event) {
-            console.log("✅ YouTube Player Ready.");
             isPlayerReady = true;
-
             if (queuedCommand) {
                 executeCommand(queuedCommand);
                 queuedCommand = null;
             }
         }
 
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING) {
-                document.getElementById("interactionPrompt").style.display = "none";
+        function executeCommand(data) {
+            if (data.command === "play") {
+                player.loadVideoById(data.video);
+                document.getElementById("videoContainer").style.display = "block";
+                setTimeout(() => {
+                    player.unMute();
+                    player.playVideo();
+                }, 500);
             }
         }
 
-        function executeCommand(data) {
-            if (data.command === "play") {
-               
+        connectWebSocket();
+    </script>
+</body>
+</html>
