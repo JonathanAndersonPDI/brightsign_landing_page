@@ -41,7 +41,8 @@
     <script>
         let player;
         let isPlayerReady = false;
-        let queuedCommand = null;
+        let lastVideoId = null; // ✅ Store the last requested video ID
+        let hasPlayedVideo = false;
         let ws;
 
         function connectWebSocket() {
@@ -66,12 +67,6 @@
                 try {
                     let data = JSON.parse(event.data);
                     console.log("📩 Received message:", data);
-
-                    if (!isPlayerReady) {
-                        queuedCommand = data;
-                        return;
-                    }
-
                     executeCommand(data);
                 } catch (error) {
                     console.error("❌ Error processing WebSocket message:", error);
@@ -83,7 +78,7 @@
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
-                playerVars: { 'autoplay': 0, 'controls': 1, 'mute': 1 },
+                playerVars: { 'autoplay': 0, 'controls': 1, 'mute': 1 }, // ✅ Mute allows autoplay
                 events: {
                     'onReady': onPlayerReady
                 }
@@ -92,30 +87,45 @@
 
         function onPlayerReady(event) {
             isPlayerReady = true;
-            if (queuedCommand) {
-                executeCommand(queuedCommand);
-                queuedCommand = null;
-            }
         }
 
         function executeCommand(data) {
+            if (!isPlayerReady) return;
+
             if (data.command === "play") {
-                player.loadVideoById(data.video);
-                document.getElementById("videoContainer").style.display = "block";
-                setTimeout(() => {
-                    player.unMute();
-                    player.playVideo();
-                }, 500);
+                lastVideoId = data.video; // ✅ Store last played video
+                playYouTubeVideo(lastVideoId);
             } else if (data.command === "pause") {
-                player.pauseVideo();
-            } else if (data.command === "resume") {
-                player.playVideo();
+                if (hasPlayedVideo) player.pauseVideo();
+            } else if (data.command === "resume" || data.command === "playControl") {
+                // ✅ "PlayControl" means the play button from playback controls was pressed
+                if (lastVideoId) {
+                    playYouTubeVideo(lastVideoId);
+                } else {
+                    console.warn("⚠️ No video selected yet. Play a video first.");
+                    document.getElementById("status").innerText = "⚠️ Select a video first!";
+                }
             } else if (data.command === "restart") {
-                player.seekTo(0);
-                player.playVideo();
+                if (hasPlayedVideo) {
+                    player.seekTo(0);
+                    player.playVideo();
+                }
             } else if (data.command === "stop") {
                 player.stopVideo();
+                hasPlayedVideo = false;
             }
+        }
+
+        function playYouTubeVideo(videoId) {
+            console.log("▶️ Playing YouTube Video:", videoId);
+            player.loadVideoById(videoId);
+            document.getElementById("videoContainer").style.display = "block";
+
+            setTimeout(() => {
+                player.unMute();
+                player.playVideo();
+                hasPlayedVideo = true;
+            }, 500);
         }
 
         connectWebSocket();
