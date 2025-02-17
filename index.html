@@ -16,7 +16,7 @@
             position: relative;
         }
         #videoContainer {
-            display: none; /* Hides the video player until a video is selected */
+            display: none;
             position: relative;
         }
         iframe {
@@ -41,8 +41,8 @@
     <script>
         let player;
         let isPlayerReady = false;
-        let lastVideoId = null;
-        let hasPlayedVideo = false;
+        let lastVideoId = null; // Stores last selected video
+        let hasPlayedVideo = false; // Tracks if a video has started playing
         let ws;
 
         function connectWebSocket() {
@@ -96,8 +96,11 @@
                 lastVideoId = data.video;
                 playYouTubeVideo(lastVideoId);
             } else if (data.command === "playControl") {
-                if (lastVideoId) {
+                // If a video has never played, use "play"
+                if (lastVideoId && !hasPlayedVideo) {
                     playYouTubeVideo(lastVideoId);
+                } else if (hasPlayedVideo) {
+                    player.playVideo();
                 } else {
                     console.warn("⚠️ No video selected yet.");
                     document.getElementById("status").innerText = "⚠️ Select a video first!";
@@ -115,7 +118,7 @@
                 player.stopVideo();
                 hasPlayedVideo = false;
             } else if (data.command === "return") {
-                window.location.href = "https://jonathanandersonpdi.github.io/brightsign_landing_page/"; // Redirect back
+                window.location.href = "video-selector.html"; // Redirect back
             }
         }
 
@@ -124,7 +127,7 @@
             player.loadVideoById(videoId);
             document.getElementById("videoContainer").style.display = "block"; // Show the video player
             player.playVideo();
-            hasPlayedVideo = true;
+            hasPlayedVideo = true; // Mark that a video has been played
         }
 
         connectWebSocket();
