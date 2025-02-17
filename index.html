@@ -41,16 +41,16 @@
         let ws;
 
         function onYouTubeIframeAPIReady() {
-            console.log("📡 YouTube API Loaded, Initializing Player...");
-            player = new YT.Player('youtubePlayer', {
-                height: '450',
-                width: '80%',
-                playerVars: { 'autoplay': 0, 'controls': 1 }, // No forced mute
-                events: {
-                    'onReady': onPlayerReady
-                }
-            });
+    console.log("📡 YouTube API Loaded, Initializing Player...");
+    player = new YT.Player('youtubePlayer', {
+        height: '450',
+        width: '80%',
+        playerVars: { 'autoplay': 0, 'controls': 1 }, // No forced mute
+        events: {
+            'onReady': onPlayerReady
         }
+    });
+}
 
         function onPlayerReady(event) {
             console.log("✅ YouTube Player is Ready!");
@@ -87,37 +87,44 @@
         }
 
         function handleCommand(data) {
-            if (!isPlayerReady) {
-                console.warn("⚠️ Player not ready yet. Ignoring command.");
-                return;
-            }
+    if (!isPlayerReady) {
+        console.warn("⚠️ Player not ready yet. Ignoring command.");
+        return;
+    }
 
-            console.log(`🎬 Received command: ${data.command}`);
+    console.log(`🎬 Received command: ${data.command}`);
 
-            if (data.command === "play") {
-                lastVideoId = data.video;
-                loadVideo(lastVideoId);
-            } else if (data.command === "playControl") {
-                if (lastVideoId) {
-                    console.log("🎬 Playing video from playControl button...");
-                    player.playVideo();
-                } else {
-                    console.warn("⚠️ No video selected yet.");
-                    document.getElementById("status").innerText = "⚠️ Select a video first!";
-                }
-            } else if (data.command === "pause") {
-                player.pauseVideo();
-            } else if (data.command === "resume") {
-                player.playVideo();
-            } else if (data.command === "restart") {
-                player.seekTo(0);
-                player.playVideo();
-            } else if (data.command === "stop") {
-                player.stopVideo();
-            } else if (data.command === "return") {
-                window.location.href = "video-selector.html"; // ✅ Redirect back
-            }
+    if (data.command === "play") {
+        lastVideoId = data.video;
+        loadVideo(lastVideoId);
+    } else if (data.command === "playControl") {
+    if (lastVideoId) {
+        console.log("🎬 Playing video from playControl button...");
+        console.log("▶️ Attempting to Play Video. Current Player State:", player.getPlayerState());
+        if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+            player.playVideo();
+        } else {
+            console.warn("⚠️ Video is already playing.");
         }
+    } else {
+        console.warn("⚠️ No video selected yet.");
+        document.getElementById("status").innerText = "⚠️ Select a video first!";
+    }
+}
+
+    } else if (data.command === "pause") {
+        player.pauseVideo();
+    } else if (data.command === "resume") {
+        player.playVideo();
+    } else if (data.command === "restart") {
+        player.seekTo(0);
+        player.playVideo();
+    } else if (data.command === "stop") {
+        player.stopVideo();
+    } else if (data.command === "return") {
+        window.location.href = "video-selector.html"; // ✅ Redirect back
+    }
+}
 
         function loadVideo(videoId) {
             console.log("▶️ Loading Video:", videoId);
