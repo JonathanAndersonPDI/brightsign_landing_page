@@ -25,6 +25,19 @@
             margin-top: 20px;
             font-size: 18px;
         }
+        #interactionPrompt {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -32,12 +45,16 @@
     <div id="videoContainer">
         <div id="youtubePlayer"></div>
     </div>
+    <div id="interactionPrompt" onclick="resumePlayback()">
+        Tap anywhere to start video playback.
+    </div>
     <div id="status">Connecting to WebSocket...</div>
 
     <script>
         let player;
         let isPlayerReady = false;
         let lastVideoId = null;
+        let userInteracted = false;
         let ws;
 
         function onYouTubeIframeAPIReady() {
@@ -45,9 +62,10 @@
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
-                playerVars: { 'autoplay': 0, 'controls': 1 },
+                playerVars: { 'autoplay': 0, 'controls': 1, 'mute': 1 }, // Mute allows autoplay
                 events: {
-                    'onReady': onPlayerReady
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
                 }
             });
         }
@@ -55,6 +73,12 @@
         function onPlayerReady(event) {
             console.log("✅ YouTube Player is Ready!");
             isPlayerReady = true;
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                document.getElementById("interactionPrompt").style.display = "none";
+            }
         }
 
         function connectWebSocket() {
@@ -105,7 +129,7 @@
             } else if (data.command === "pause") {
                 player.pauseVideo();
             } else if (data.command === "resume") {
-                player.playVideo();
+                resumePlayback();
             } else if (data.command === "restart") {
                 player.seekTo(0);
                 player.playVideo();
@@ -120,15 +144,31 @@
             console.log("▶️ Loading Video:", videoId);
             player.loadVideoById(videoId);
             document.getElementById("videoContainer").style.display = "block";
+            setTimeout(() => {
+                if (!userInteracted) {
+                    document.getElementById("interactionPrompt").style.display = "block";
+                } else {
+                    player.unMute();
+                    player.playVideo();
+                }
+            }, 500);
         }
 
         function playVideo() {
-            if (!isPlayerReady) {
-                console.warn("⚠️ Player not ready, delaying play.");
-                setTimeout(playVideo, 500);
+            if (!userInteracted) {
+                document.getElementById("interactionPrompt").style.display = "block";
                 return;
             }
             console.log("🎬 Playing Video");
+            player.unMute();
+            player.playVideo();
+        }
+
+        function resumePlayback() {
+            console.log("🎭 Simulating user interaction...");
+            userInteracted = true;
+            document.getElementById("interactionPrompt").style.display = "none";
+            player.unMute();
             player.playVideo();
         }
 
