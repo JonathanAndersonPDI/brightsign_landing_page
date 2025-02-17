@@ -25,19 +25,6 @@
             margin-top: 20px;
             font-size: 18px;
         }
-        #interactionPrompt {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
@@ -45,16 +32,12 @@
     <div id="videoContainer">
         <div id="youtubePlayer"></div>
     </div>
-    <div id="interactionPrompt" onclick="resumePlayback()">
-        Tap anywhere to start video playback.
-    </div>
     <div id="status">Connecting to WebSocket...</div>
 
     <script>
         let player;
         let isPlayerReady = false;
         let lastVideoId = null;
-        let userInteracted = false;
         let ws;
 
         function onYouTubeIframeAPIReady() {
@@ -64,8 +47,7 @@
                 width: '80%',
                 playerVars: { 'autoplay': 0, 'controls': 1 }, // No forced mute
                 events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
+                    'onReady': onPlayerReady
                 }
             });
         }
@@ -73,12 +55,6 @@
         function onPlayerReady(event) {
             console.log("✅ YouTube Player is Ready!");
             isPlayerReady = true;
-        }
-
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.PLAYING) {
-                document.getElementById("interactionPrompt").style.display = "none";
-            }
         }
 
         function connectWebSocket() {
@@ -116,12 +92,15 @@
                 return;
             }
 
+            console.log(`🎬 Received command: ${data.command}`);
+
             if (data.command === "play") {
                 lastVideoId = data.video;
                 loadVideo(lastVideoId);
             } else if (data.command === "playControl") {
                 if (lastVideoId) {
-                    playVideo();
+                    console.log("🎬 Playing video from playControl button...");
+                    player.playVideo();
                 } else {
                     console.warn("⚠️ No video selected yet.");
                     document.getElementById("status").innerText = "⚠️ Select a video first!";
@@ -129,7 +108,7 @@
             } else if (data.command === "pause") {
                 player.pauseVideo();
             } else if (data.command === "resume") {
-                resumePlayback();
+                player.playVideo();
             } else if (data.command === "restart") {
                 player.seekTo(0);
                 player.playVideo();
@@ -144,23 +123,6 @@
             console.log("▶️ Loading Video:", videoId);
             player.loadVideoById(videoId);
             document.getElementById("videoContainer").style.display = "block";
-            document.getElementById("interactionPrompt").style.display = "block";
-        }
-
-        function playVideo() {
-            if (!userInteracted) {
-                document.getElementById("interactionPrompt").style.display = "block";
-                return;
-            }
-            console.log("🎬 Playing Video");
-            player.playVideo();
-        }
-
-        function resumePlayback() {
-            console.log("🎭 Simulating user interaction...");
-            userInteracted = true;
-            document.getElementById("interactionPrompt").style.display = "none";
-            player.playVideo();
         }
 
         connectWebSocket();
