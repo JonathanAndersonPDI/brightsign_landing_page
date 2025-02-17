@@ -4,16 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Power Design</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <script src="https://www.youtube.com/iframe_api"></script> 
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         body {
             background-color: black;
             text-align: center;
             color: white;
-            font-family: 'Libre Franklin', sans-serif;
-            position: relative;
         }
         #videoContainer {
             display: none;
@@ -29,131 +25,62 @@
             margin-top: 20px;
             font-size: 18px;
         }
-        #playButton {
-            display: none;
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 18px;
-            cursor: pointer;
-            background-color: red;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        #playButton:hover {
-            background-color: darkred;
-        }
     </style>
 </head>
 <body>
-    <img src="power_design_logo.jpg" alt="Power Design" width="200px">
-    
+    <h1>Power Design</h1>
     <div id="videoContainer">
         <div id="youtubePlayer"></div>
     </div>
-
-    <button id="playButton">Play</button>
-    
     <div id="status">Connecting to WebSocket...</div>
 
     <script>
         let player;
         let isPlayerReady = false;
         let lastVideoId = null;
-        let hasPlayedVideo = false;
         let ws;
-
-        function connectWebSocket() {
-            ws = new WebSocket("ws://localhost:8080");
-
-            ws.onopen = () => {
-                console.log("✅ WebSocket connected on Landing Page!");
-                document.getElementById("status").innerText = "✅ WebSocket Connected!";
-            };
-
-            ws.onclose = () => {
-                console.warn("⚠️ WebSocket Disconnected. Retrying...");
-                document.getElementById("status").innerText = "⚠️ WebSocket Disconnected. Retrying...";
-                setTimeout(connectWebSocket, 5000);
-            };
-
-            ws.onerror = (error) => {
-                console.error("❌ WebSocket Error:", error);
-            };
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    console.log("📩 Received message:", data);
-                    handleCommand(data);
-                } catch (error) {
-                    console.error("❌ Error processing WebSocket message:", error);
-                }
-            };
-        }
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
                 playerVars: { 'autoplay': 0, 'controls': 1 },
-                events: {
-                    'onReady': onPlayerReady
-                }
+                events: { 'onReady': () => isPlayerReady = true }
             });
         }
 
-        function onPlayerReady(event) {
-            isPlayerReady = true;
-            document.getElementById('playButton').style.display = 'inline-block';
+        function connectWebSocket() {
+            ws = new WebSocket("ws://localhost:8080");
+
+            ws.onopen = () => {
+                document.getElementById("status").innerText = "✅ WebSocket Connected!";
+            };
+
+            ws.onclose = () => {
+                document.getElementById("status").innerText = "⚠️ WebSocket Disconnected. Retrying...";
+                setTimeout(connectWebSocket, 5000);
+            };
+
+            ws.onmessage = (event) => {
+                let data = JSON.parse(event.data);
+                handleCommand(data);
+            };
         }
 
         function handleCommand(data) {
             if (!isPlayerReady) return;
 
-            switch (data.command) {
-                case "play":
-                    lastVideoId = data.video;
-                    loadAndPlayVideo(lastVideoId);
-                    break;
-                case "pause":
-                    if (hasPlayedVideo) player.pauseVideo();
-                    break;
-                case "resume":
-                    if (hasPlayedVideo) player.playVideo();
-                    break;
-                case "restart":
-                    if (hasPlayedVideo) {
-                        player.seekTo(0);
-                        player.playVideo();
-                    }
-                    break;
-                case "stop":
-                    player.stopVideo();
-                    break;
-                case "return":
-                    window.location.href = "video-selector.html";
-                    break;
-                default:
-                    console.warn("⚠️ Unknown command received.");
-            }
-        }
-
-        function loadAndPlayVideo(videoId) {
-            console.log("▶️ Loading YouTube Video:", videoId);
-            player.loadVideoById(videoId);
-            document.getElementById("videoContainer").style.display = "block";
-            document.getElementById("playButton").style.display = 'inline-block';
-        }
-
-        document.getElementById('playButton').addEventListener('click', () => {
-            if (lastVideoId) {
+            if (data.command === "play" || data.command === "playControl") {
+                lastVideoId = data.video;
+                player.loadVideoById(lastVideoId);
+                document.getElementById("videoContainer").style.display = "block";
                 player.playVideo();
-                document.getElementById('playButton').style.display = 'none';
-            } else {
-                alert("No video selected to play.");
+            } else if (data.command === "pause") {
+                player.pauseVideo();
+            } else if (data.command === "resume") {
+                player.playVideo();
             }
-        });
+        }
 
         connectWebSocket();
     </script>
