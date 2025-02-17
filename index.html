@@ -62,7 +62,7 @@
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
-                playerVars: { 'autoplay': 0, 'controls': 1, 'mute': 1 }, // Mute allows autoplay
+                playerVars: { 'autoplay': 0, 'controls': 1 }, // No forced mute
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
@@ -118,7 +118,7 @@
 
             if (data.command === "play") {
                 lastVideoId = data.video;
-                loadAndPlayVideo(lastVideoId);
+                loadVideo(lastVideoId);
             } else if (data.command === "playControl") {
                 if (lastVideoId) {
                     playVideo();
@@ -140,18 +140,11 @@
             }
         }
 
-        function loadAndPlayVideo(videoId) {
+        function loadVideo(videoId) {
             console.log("▶️ Loading Video:", videoId);
             player.loadVideoById(videoId);
             document.getElementById("videoContainer").style.display = "block";
-            setTimeout(() => {
-                if (!userInteracted) {
-                    document.getElementById("interactionPrompt").style.display = "block";
-                } else {
-                    player.unMute();
-                    player.playVideo();
-                }
-            }, 500);
+            document.getElementById("interactionPrompt").style.display = "block";
         }
 
         function playVideo() {
@@ -160,7 +153,6 @@
                 return;
             }
             console.log("🎬 Playing Video");
-            player.unMute();
             player.playVideo();
         }
 
@@ -168,7 +160,6 @@
             console.log("🎭 Simulating user interaction...");
             userInteracted = true;
             document.getElementById("interactionPrompt").style.display = "none";
-            player.unMute();
             player.playVideo();
         }
 
