@@ -42,7 +42,7 @@
         let player;
         let isPlayerReady = false;
         let lastVideoId = null;
-        let hasPlayedVideo = false;
+        let isPlaying = false;
         let ws;
 
         function connectWebSocket() {
@@ -80,13 +80,24 @@
                 width: '80%',
                 playerVars: { 'autoplay': 0, 'controls': 1, 'mute': 1 },
                 events: {
-                    'onReady': onPlayerReady
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
                 }
             });
         }
 
         function onPlayerReady(event) {
             isPlayerReady = true;
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+            } else if (event.data === YT.PlayerState.PAUSED) {
+                isPlaying = false;
+            } else if (event.data === YT.PlayerState.ENDED) {
+                isPlaying = false;
+            }
         }
 
         function executeCommand(data) {
@@ -96,9 +107,11 @@
                 lastVideoId = data.video;
                 playYouTubeVideo(lastVideoId);
             } else if (data.command === "pause") {
-                if (hasPlayedVideo) player.pauseVideo();
+                if (isPlaying) player.pauseVideo();
             } else if (data.command === "resume") {
-                if (hasPlayedVideo) player.playVideo();
+                if (!isPlaying && lastVideoId) {
+                    player.playVideo();
+                }
             } else if (data.command === "playControl") {
                 if (lastVideoId) {
                     player.playVideo();
@@ -107,13 +120,13 @@
                     document.getElementById("status").innerText = "⚠️ Select a video first!";
                 }
             } else if (data.command === "restart") {
-                if (hasPlayedVideo) {
+                if (lastVideoId) {
                     player.seekTo(0);
                     player.playVideo();
                 }
             } else if (data.command === "stop") {
                 player.stopVideo();
-                hasPlayedVideo = false;
+                isPlaying = false;
             }
         }
 
@@ -125,7 +138,7 @@
             setTimeout(() => {
                 player.unMute();
                 player.playVideo();
-                hasPlayedVideo = true;
+                isPlaying = true;
             }, 500);
         }
 
