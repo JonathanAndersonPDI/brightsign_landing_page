@@ -106,8 +106,15 @@
                     player.unMute();
                     player.playVideo();
                 }, 500);
+            } else if (data.command === "pause") {
+                player.pauseVideo();
             } else if (data.command === "resume") {
-                player.playVideo(); // Resumes playback
+                player.playVideo();
+            } else if (data.command === "restart") {
+                player.seekTo(0);
+                player.playVideo();
+            } else if (data.command === "stop") {
+                player.stopVideo();
             }
         }
 
