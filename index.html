@@ -38,6 +38,10 @@
             font-size: 18px;
             cursor: pointer;
         }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -51,10 +55,58 @@
         <div id="youtubePlayer"></div>
     </div>
 
+    <div id="status">Connecting to WebSocket...</div>
+
     <script>
         let player;
         let isPlayerReady = false;
-        let queuedCommand = null; // Store any commands before the player is ready
+        let queuedCommand = null;
+        let ws;
+        let reconnectInterval = 5000;
+
+        function connectWebSocket() {
+            ws = new WebSocket("ws://localhost:8080");
+
+            ws.onopen = () => {
+                console.log("✅ WebSocket connected on Landing Page!");
+                document.getElementById("status").innerText = "✅ WebSocket Connected!";
+            };
+
+            ws.onclose = () => {
+                console.warn("⚠️ WebSocket Disconnected. Retrying...");
+                document.getElementById("status").innerText = "⚠️ WebSocket Disconnected. Retrying...";
+                setTimeout(connectWebSocket, reconnectInterval);
+            };
+
+            ws.onerror = (error) => {
+                console.error("❌ WebSocket Error:", error);
+            };
+
+            ws.onmessage = async (event) => {
+                try {
+                    let data;
+
+                    if (event.data instanceof Blob) {
+                        let text = await event.data.text();
+                        data = JSON.parse(text);
+                    } else {
+                        data = JSON.parse(event.data);
+                    }
+
+                    console.log("📩 Received message:", data);
+
+                    if (!isPlayerReady) {
+                        console.warn("⚠️ Player not ready, storing command:", data);
+                        queuedCommand = data;
+                        return;
+                    }
+
+                    executeCommand(data);
+                } catch (error) {
+                    console.error("❌ Error processing WebSocket message:", error);
+                }
+            };
+        }
 
         function onYouTubeIframeAPIReady() {
             console.log("⏳ YouTube IFrame API Loaded. Creating player...");
@@ -73,7 +125,6 @@
             console.log("✅ YouTube Player Ready.");
             isPlayerReady = true;
 
-            // Execute any pending command (if one was received before player was ready)
             if (queuedCommand) {
                 executeCommand(queuedCommand);
                 queuedCommand = null;
@@ -86,73 +137,6 @@
             }
         }
 
-        const ws = new WebSocket("ws://localhost:8080");
-        const videoContainer = document.getElementById("videoContainer");
-        const interactionPrompt = document.getElementById("interactionPrompt");
-
-        ws.onopen = () => {
-            console.log("✅ WebSocket connected successfully on Landing Page!");
-        };
-
-        ws.onmessage = async (event) => {
-            try {
-                let data;
-
-                // **Handle Blob WebSocket Messages**
-                if (event.data instanceof Blob) {
-                    let text = await event.data.text(); // Convert Blob to text
-                    data = JSON.parse(text); // Parse JSON
-                } else {
-                    data = JSON.parse(event.data);
-                }
-
-                console.log("📩 Received message:", data);
-
-                // Store command if player isn't ready
-                if (!isPlayerReady) {
-                    console.warn("⚠️ Player not ready, storing command:", data);
-                    queuedCommand = data;
-                    return;
-                }
-
-                executeCommand(data);
-            } catch (error) {
-                console.error("❌ Error processing WebSocket message:", error);
-            }
-        };
-
         function executeCommand(data) {
             if (data.command === "play") {
-                playYouTubeVideo(data.video);
-            } else if (data.command === "pause") {
-                player.pauseVideo();
-            } else if (data.command === "resume") {
-                simulateUserClick();
-            } else if (data.command === "restart") {
-                player.seekTo(0);
-                simulateUserClick();
-            } else if (data.command === "stop") {
-                location.reload();
-            }
-        }
-
-        function playYouTubeVideo(videoId) {
-            console.log("▶️ Loading YouTube Video:", videoId);
-
-            player.loadVideoById(videoId);
-            videoContainer.style.display = "block";
-
-            setTimeout(() => {
-                player.unMute();
-                player.playVideo();
-            }, 500);
-        }
-
-        function simulateUserClick() {
-            console.log("🎭 Simulating user click to resume video...");
-            player.unMute();
-            player.playVideo();
-        }
-    </script>
-</body>
-</html>
+               
