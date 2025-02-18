@@ -127,8 +127,20 @@
         }
 
         function playVideo() {
-            console.log("🎬 Playing Video...");
-            if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+            if (!isPlayerReady) {
+                console.warn("⚠️ Player not ready, delaying play.");
+                setTimeout(playVideo, 500);
+                return;
+            }
+
+            console.log("🎬 Attempting to Play Video...");
+            console.log("📢 Player State Before Play:", player.getPlayerState());
+
+            if (player.getPlayerState() === -1 || player.getPlayerState() === 0) {
+                console.log("🔄 Reloading the last video before playing...");
+                player.loadVideoById(lastVideoId);
+                setTimeout(() => player.playVideo(), 500);
+            } else if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
                 player.playVideo();
             } else {
                 console.warn("⚠️ Video is already playing.");
