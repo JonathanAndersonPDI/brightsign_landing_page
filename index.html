@@ -38,7 +38,6 @@
         let player;
         let isPlayerReady = false;
         let lastVideoId = null;
-        let hasVideoLoaded = false;
         let ws;
 
         function onYouTubeIframeAPIReady() {
@@ -97,10 +96,10 @@
 
             if (data.command === "play") {
                 lastVideoId = data.video;
-                hasVideoLoaded = true;
-                loadVideo(lastVideoId);
+                console.log(`🔄 Storing lastVideoId: ${lastVideoId}`);
+                loadAndPlayVideo(lastVideoId);
             } else if (data.command === "playControl") {
-                if (!hasVideoLoaded) {
+                if (!lastVideoId) {
                     console.warn("⚠️ No video has been loaded yet.");
                     document.getElementById("status").innerText = "⚠️ No video loaded!";
                     return;
@@ -120,10 +119,14 @@
             }
         }
 
-        function loadVideo(videoId) {
+        function loadAndPlayVideo(videoId) {
             console.log("▶️ Loading Video:", videoId);
             player.loadVideoById(videoId);
             document.getElementById("videoContainer").style.display = "block";
+            setTimeout(() => {
+                console.log("🎬 Forcing video to play after loading...");
+                player.playVideo();
+            }, 500);
         }
 
         function playVideo() {
@@ -140,10 +143,8 @@
                 console.log("🔄 Reloading the last video before playing...");
                 player.loadVideoById(lastVideoId);
                 setTimeout(() => player.playVideo(), 500);
-            } else if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
-                player.playVideo();
             } else {
-                console.warn("⚠️ Video is already playing.");
+                player.playVideo();
             }
         }
 
