@@ -38,6 +38,7 @@
         let player;
         let isPlayerReady = false;
         let lastVideoId = null;
+        let hasVideoLoaded = false;
         let ws;
 
         function onYouTubeIframeAPIReady() {
@@ -96,20 +97,15 @@
 
             if (data.command === "play") {
                 lastVideoId = data.video;
+                hasVideoLoaded = true;
                 loadVideo(lastVideoId);
             } else if (data.command === "playControl") {
-                if (lastVideoId) {
-                    console.log("🎬 Playing video from playControl button...");
-                    console.log("▶️ Attempting to Play Video. Current Player State:", player.getPlayerState());
-                    if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
-                        player.playVideo();
-                    } else {
-                        console.warn("⚠️ Video is already playing.");
-                    }
-                } else {
-                    console.warn("⚠️ No video selected yet.");
-                    document.getElementById("status").innerText = "⚠️ Select a video first!";
+                if (!hasVideoLoaded) {
+                    console.warn("⚠️ No video has been loaded yet.");
+                    document.getElementById("status").innerText = "⚠️ No video loaded!";
+                    return;
                 }
+                playVideo();
             } else if (data.command === "pause") {
                 player.pauseVideo();
             } else if (data.command === "resume") {
@@ -120,7 +116,7 @@
             } else if (data.command === "stop") {
                 player.stopVideo();
             } else if (data.command === "return") {
-                window.location.href = "video-selector.html"; // ✅ Redirect back
+                window.location.href = "video-selector.html";
             }
         }
 
@@ -128,6 +124,15 @@
             console.log("▶️ Loading Video:", videoId);
             player.loadVideoById(videoId);
             document.getElementById("videoContainer").style.display = "block";
+        }
+
+        function playVideo() {
+            console.log("🎬 Playing Video...");
+            if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+                player.playVideo();
+            } else {
+                console.warn("⚠️ Video is already playing.");
+            }
         }
 
         connectWebSocket();
