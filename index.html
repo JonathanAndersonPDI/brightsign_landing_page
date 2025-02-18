@@ -38,6 +38,7 @@
         let player;
         let isPlayerReady = false;
         let lastVideoId = null;
+        let hasVideoLoaded = false;
         let ws;
 
         function onYouTubeIframeAPIReady() {
@@ -96,6 +97,7 @@
 
             if (data.command === "play") {
                 lastVideoId = data.video;
+                hasVideoLoaded = true;
                 console.log(`🔄 Storing lastVideoId: ${lastVideoId}`);
                 loadAndPlayVideo(lastVideoId);
             } else if (data.command === "playControl") {
@@ -104,7 +106,7 @@
                     document.getElementById("status").innerText = "⚠️ No video loaded!";
                     return;
                 }
-                playVideo();
+                forcePlayVideo();
             } else if (data.command === "pause") {
                 player.pauseVideo();
             } else if (data.command === "resume") {
@@ -123,19 +125,9 @@
             console.log("▶️ Loading Video:", videoId);
             player.loadVideoById(videoId);
             document.getElementById("videoContainer").style.display = "block";
-            setTimeout(() => {
-                console.log("🎬 Forcing video to play after loading...");
-                player.playVideo();
-            }, 500);
         }
 
-        function playVideo() {
-            if (!isPlayerReady) {
-                console.warn("⚠️ Player not ready, delaying play.");
-                setTimeout(playVideo, 500);
-                return;
-            }
-
+        function forcePlayVideo() {
             console.log("🎬 Attempting to Play Video...");
             console.log("📢 Player State Before Play:", player.getPlayerState());
 
