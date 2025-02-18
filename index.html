@@ -6,25 +6,21 @@
     <title>Power Design</title>
     <script src="https://www.youtube.com/iframe_api"></script>
     <style>
-        body {
-            background-color: black;
-            text-align: center;
-            color: white;
-        }
-        #videoContainer {
-            display: none;
-            position: relative;
-        }
-        iframe {
-            width: 80%;
-            height: 450px;
-            margin-top: 20px;
-            border: none;
-        }
-        #status {
-            margin-top: 20px;
+        body { background-color: black; text-align: center; color: white; }
+        #videoContainer { display: none; }
+        iframe { width: 80%; height: 450px; margin-top: 20px; border: none; }
+        button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
             font-size: 18px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
+        button:hover { background-color: darkred; }
     </style>
 </head>
 <body>
@@ -32,49 +28,79 @@
     <div id="videoContainer">
         <div id="youtubePlayer"></div>
     </div>
-    <div id="status">Connecting to WebSocket...</div>
-
+    <h2>Playback Controls</h2>
+    <button onclick="playVideo()">Play</button>
+    <button onclick="pauseVideo()">Pause</button>
+    <button onclick="resumeVideo()">Resume</button>
+    <button onclick="restartVideo()">Restart</button>
+    <button onclick="stopVideo()">Stop</button>
+    <button onclick="returnToSelector()">Return to Video Selector</button>
+    
     <script>
         let player;
-        let isPlayerReady = false;
         let lastVideoId = null;
-        let videoHistory = []; // Store history of played videos
+        let isPlayerReady = false;
         let ws;
 
         function onYouTubeIframeAPIReady() {
-            console.log("📡 YouTube API Loaded, Initializing Player...");
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
                 playerVars: { 'autoplay': 0, 'controls': 1 },
                 events: {
-                    'onReady': onPlayerReady
+                    'onReady': () => {
+                        isPlayerReady = true;
+                        playStoredVideo();
+                    }
                 }
             });
         }
 
-        function onPlayerReady(event) {
-            console.log("✅ YouTube Player is Ready!");
-            isPlayerReady = true;
+        function playStoredVideo() {
+            let urlParams = new URLSearchParams(window.location.search);
+            let videoId = urlParams.get("video") || localStorage.getItem("selectedVideo");
+
+            if (videoId) {
+                lastVideoId = videoId;
+                document.getElementById("videoContainer").style.display = "block";
+                player.loadVideoById(videoId);
+            } else {
+                alert("No video selected!");
+            }
         }
 
+        function playVideo() {
+            if (lastVideoId) {
+                player.playVideo();
+            }
+        }
+
+        function pauseVideo() {
+            player.pauseVideo();
+        }
+
+        function resumeVideo() {
+            player.playVideo();
+        }
+
+        function restartVideo() {
+            player.seekTo(0);
+            player.playVideo();
+        }
+
+        function stopVideo() {
+            player.stopVideo();
+        }
+
+        function returnToSelector() {
+            window.location.href = "video-selector.html";
+        }
+
+        // ✅ WebSocket API (for external control)
         function connectWebSocket() {
             ws = new WebSocket("ws://localhost:8080");
 
-            ws.onopen = () => {
-                console.log("✅ WebSocket connected!");
-                document.getElementById("status").innerText = "✅ WebSocket Connected!";
-            };
-
-            ws.onclose = () => {
-                console.warn("⚠️ WebSocket Disconnected. Retrying...");
-                document.getElementById("status").innerText = "⚠️ WebSocket Disconnected. Retrying...";
-                setTimeout(connectWebSocket, 5000);
-            };
-
-            ws.onerror = (error) => {
-                console.error("❌ WebSocket Error:", error);
-            };
+            ws.onopen = () => console.log("✅ WebSocket connected!");
 
             ws.onmessage = (event) => {
                 try {
@@ -85,24 +111,23 @@
                     console.error("❌ Error Processing WebSocket Message:", error);
                 }
             };
+
+            ws.onclose = () => {
+                console.warn("⚠️ WebSocket Disconnected. Retrying...");
+                setTimeout(connectWebSocket, 5000);
+            };
         }
 
         function handleCommand(data) {
-            if (!isPlayerReady) {
-                console.warn("⚠️ Player not ready yet. Ignoring command.");
-                return;
-            }
-
-            console.log(`🎬 Received command: ${data.command}`);
+            if (!isPlayerReady) return console.warn("⚠️ Player not ready.");
 
             if (data.command === "play") {
                 lastVideoId = data.video;
-                if (!videoHistory.includes(lastVideoId)) {
-                    videoHistory.push(lastVideoId);
-                }
-                loadVideo(lastVideoId);
+                player.loadVideoById(lastVideoId);
             } else if (data.command === "playControl") {
-                playVideo();
+                if (lastVideoId) {
+                    player.playVideo();
+                }
             } else if (data.command === "pause") {
                 player.pauseVideo();
             } else if (data.command === "resume") {
@@ -112,44 +137,6 @@
                 player.playVideo();
             } else if (data.command === "stop") {
                 player.stopVideo();
-            } else if (data.command === "return") {
-                window.location.href = "video-selector.html";
-            }
-        }
-
-        function loadVideo(videoId) {
-            console.log("▶️ Loading Video:", videoId);
-            player.loadVideoById(videoId);
-            document.getElementById("videoContainer").style.display = "block";
-        }
-
-        function playVideo() {
-            if (!lastVideoId && videoHistory.length > 0) {
-                lastVideoId = videoHistory[videoHistory.length - 1];
-                loadVideo(lastVideoId);
-            }
-
-            if (!lastVideoId) {
-                console.warn("⚠️ No video history. Cannot play.");
-                document.getElementById("status").innerText = "⚠️ No video history!";
-                return;
-            }
-
-            console.log("🎬 Attempting to Play Video...");
-            console.log("📢 Player State Before Play:", player.getPlayerState());
-
-            if (player.getVideoData().video_id !== lastVideoId) {
-                console.log("🔄 Video not set. Reloading last video...");
-                player.loadVideoById(lastVideoId);
-                setTimeout(() => {
-                    console.log("▶️ Playing video after load...");
-                    player.playVideo();
-                }, 1000);
-            } else if (player.getPlayerState() === YT.PlayerState.PAUSED || player.getPlayerState() === 0) {
-                console.log("▶️ Resuming paused/stopped video...");
-                player.playVideo();
-            } else {
-                console.warn("⚠️ Video is already playing.");
             }
         }
 
