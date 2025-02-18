@@ -6,21 +6,26 @@
     <title>Power Design</title>
     <script src="https://www.youtube.com/iframe_api"></script>
     <style>
-        body { background-color: black; text-align: center; color: white; }
-        #videoContainer { display: none; }
-        iframe { width: 80%; height: 450px; margin-top: 20px; border: none; }
-        button {
-            display: block;
-            margin: 10px auto;
-            padding: 10px;
-            font-size: 18px;
-            background-color: red;
+        body {
+            background-color: black;
+            text-align: center;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            font-family: Arial, sans-serif;
         }
-        button:hover { background-color: darkred; }
+        #videoContainer {
+            display: none;
+            position: relative;
+        }
+        iframe {
+            width: 80%;
+            height: 450px;
+            margin-top: 20px;
+            border: none;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -28,79 +33,44 @@
     <div id="videoContainer">
         <div id="youtubePlayer"></div>
     </div>
-    <h2>Playback Controls</h2>
-    <button onclick="playVideo()">Play</button>
-    <button onclick="pauseVideo()">Pause</button>
-    <button onclick="resumeVideo()">Resume</button>
-    <button onclick="restartVideo()">Restart</button>
-    <button onclick="stopVideo()">Stop</button>
-    <button onclick="returnToSelector()">Return to Video Selector</button>
-    
+    <div id="status">Connecting to WebSocket...</div>
+
     <script>
         let player;
-        let lastVideoId = null;
         let isPlayerReady = false;
+        let lastVideoId = null;
+        let videoHistory = [];
         let ws;
 
         function onYouTubeIframeAPIReady() {
+            console.log("📡 YouTube API Loaded...");
             player = new YT.Player('youtubePlayer', {
                 height: '450',
                 width: '80%',
                 playerVars: { 'autoplay': 0, 'controls': 1 },
                 events: {
-                    'onReady': () => {
-                        isPlayerReady = true;
-                        playStoredVideo();
-                    }
+                    'onReady': onPlayerReady
                 }
             });
         }
 
-        function playStoredVideo() {
-            let urlParams = new URLSearchParams(window.location.search);
-            let videoId = urlParams.get("video") || localStorage.getItem("selectedVideo");
-
-            if (videoId) {
-                lastVideoId = videoId;
-                document.getElementById("videoContainer").style.display = "block";
-                player.loadVideoById(videoId);
-            } else {
-                alert("No video selected!");
-            }
+        function onPlayerReady(event) {
+            console.log("✅ YouTube Player Ready!");
+            isPlayerReady = true;
         }
 
-        function playVideo() {
-            if (lastVideoId) {
-                player.playVideo();
-            }
-        }
-
-        function pauseVideo() {
-            player.pauseVideo();
-        }
-
-        function resumeVideo() {
-            player.playVideo();
-        }
-
-        function restartVideo() {
-            player.seekTo(0);
-            player.playVideo();
-        }
-
-        function stopVideo() {
-            player.stopVideo();
-        }
-
-        function returnToSelector() {
-            window.location.href = "video-selector.html";
-        }
-
-        // ✅ WebSocket API (for external control)
         function connectWebSocket() {
             ws = new WebSocket("ws://localhost:8080");
 
-            ws.onopen = () => console.log("✅ WebSocket connected!");
+            ws.onopen = () => {
+                console.log("✅ WebSocket connected!");
+                document.getElementById("status").innerText = "✅ WebSocket Connected!";
+            };
+
+            ws.onclose = () => {
+                console.warn("⚠️ WebSocket Disconnected. Retrying...");
+                setTimeout(connectWebSocket, 5000);
+            };
 
             ws.onmessage = (event) => {
                 try {
@@ -108,26 +78,31 @@
                     console.log("📩 Received WebSocket Message:", data);
                     handleCommand(data);
                 } catch (error) {
-                    console.error("❌ Error Processing WebSocket Message:", error);
+                    console.error("❌ WebSocket Error:", error);
                 }
-            };
-
-            ws.onclose = () => {
-                console.warn("⚠️ WebSocket Disconnected. Retrying...");
-                setTimeout(connectWebSocket, 5000);
             };
         }
 
         function handleCommand(data) {
-            if (!isPlayerReady) return console.warn("⚠️ Player not ready.");
+            if (!isPlayerReady) {
+                console.warn("⚠️ Player not ready.");
+                return;
+            }
+
+            console.log(`🎬 Received command: ${data.command}`);
 
             if (data.command === "play") {
                 lastVideoId = data.video;
-                player.loadVideoById(lastVideoId);
-            } else if (data.command === "playControl") {
-                if (lastVideoId) {
-                    player.playVideo();
+                if (!videoHistory.includes(lastVideoId)) {
+                    videoHistory.push(lastVideoId);
                 }
+                loadVideo(lastVideoId);
+            } else if (data.command === "playControl") {
+                if (!lastVideoId && videoHistory.length > 0) {
+                    lastVideoId = videoHistory[videoHistory.length - 1];
+                    loadVideo(lastVideoId);
+                }
+                player.playVideo();
             } else if (data.command === "pause") {
                 player.pauseVideo();
             } else if (data.command === "resume") {
@@ -138,6 +113,12 @@
             } else if (data.command === "stop") {
                 player.stopVideo();
             }
+        }
+
+        function loadVideo(videoId) {
+            console.log("▶️ Loading Video:", videoId);
+            player.loadVideoById(videoId);
+            document.getElementById("videoContainer").style.display = "block";
         }
 
         connectWebSocket();
