@@ -38,7 +38,7 @@
         let player;
         let isPlayerReady = false;
         let lastVideoId = null;
-        let videoHistory = []; // ✅ Store all video IDs
+        let videoHistory = []; // Store history of played videos
         let ws;
 
         function onYouTubeIframeAPIReady() {
@@ -98,21 +98,11 @@
             if (data.command === "play") {
                 lastVideoId = data.video;
                 if (!videoHistory.includes(lastVideoId)) {
-                    videoHistory.push(lastVideoId); // ✅ Store video ID in history
+                    videoHistory.push(lastVideoId);
                 }
                 loadVideo(lastVideoId);
             } else if (data.command === "playControl") {
-                if (lastVideoId) {
-                    console.log("🎬 Playing the last selected video...");
-                    playVideo();
-                } else if (videoHistory.length > 0) {
-                    console.log("🔄 No last video found. Playing last in history...");
-                    lastVideoId = videoHistory[videoHistory.length - 1];
-                    loadVideo(lastVideoId);
-                } else {
-                    console.warn("⚠️ No video history. Cannot play.");
-                    document.getElementById("status").innerText = "⚠️ No video history!";
-                }
+                playVideo();
             } else if (data.command === "pause") {
                 player.pauseVideo();
             } else if (data.command === "resume") {
@@ -134,20 +124,29 @@
         }
 
         function playVideo() {
-            if (!isPlayerReady) {
-                console.warn("⚠️ Player not ready, delaying play.");
-                setTimeout(playVideo, 500);
+            if (!lastVideoId && videoHistory.length > 0) {
+                lastVideoId = videoHistory[videoHistory.length - 1];
+                loadVideo(lastVideoId);
+            }
+
+            if (!lastVideoId) {
+                console.warn("⚠️ No video history. Cannot play.");
+                document.getElementById("status").innerText = "⚠️ No video history!";
                 return;
             }
 
             console.log("🎬 Attempting to Play Video...");
             console.log("📢 Player State Before Play:", player.getPlayerState());
 
-            if (player.getPlayerState() === -1 || player.getPlayerState() === 0) {
-                console.log("🔄 Reloading last video before playing...");
+            if (player.getVideoData().video_id !== lastVideoId) {
+                console.log("🔄 Video not set. Reloading last video...");
                 player.loadVideoById(lastVideoId);
-                setTimeout(() => player.playVideo(), 500);
-            } else if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+                setTimeout(() => {
+                    console.log("▶️ Playing video after load...");
+                    player.playVideo();
+                }, 1000);
+            } else if (player.getPlayerState() === YT.PlayerState.PAUSED || player.getPlayerState() === 0) {
+                console.log("▶️ Resuming paused/stopped video...");
                 player.playVideo();
             } else {
                 console.warn("⚠️ Video is already playing.");
